@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex,nofollow">
+    <title>Seller Dashboard | Alisya's Kitchen</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700;9..144,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+    <script>
+        tailwind.config = { theme: { extend: {
+            fontFamily: { serif: ['Fraunces','Georgia','serif'], sans: ['Plus Jakarta Sans','system-ui','sans-serif'] },
+            colors: { cream:'#FDF8F2', parchment:'#F5ECE0', terracotta:'#B83A2D', terracottaDark:'#962B20', basil:'#2E5A44', basilLight:'#E8F0EC', garlic:'#D99B26', espresso:'#2A1D17', espressoMuted:'#5E4B42' },
+            boxShadow: { warm:'0 10px 30px -5px rgba(42,29,23,0.08)' }
+        } } }
+    </script>
+    <style>
+        body { background:#FDF8F2; color:#2A1D17; font-family:'Plus Jakarta Sans',sans-serif; }
+        .font-display { font-family:'Fraunces',serif; }
+        .num { width:4.25rem; text-align:center; }
+    </style>
+</head>
+<body class="pb-24">
+
+    <!-- Login -->
+    <div id="login" class="hidden min-h-screen flex items-center justify-center px-4">
+        <div class="w-full max-w-sm bg-white rounded-3xl shadow-warm border border-espresso/10 p-7 space-y-5">
+            <div class="text-center space-y-1">
+                <div class="w-12 h-12 mx-auto rounded-xl bg-terracotta text-white flex items-center justify-center"><i class="fa-solid fa-store"></i></div>
+                <h1 class="font-display text-2xl font-bold">Seller login</h1>
+                <p id="login-brand" class="text-xs uppercase tracking-widest text-garlic font-semibold"></p>
+            </div>
+            <form id="login-form" class="space-y-3">
+                <input id="login-email" type="email" autocomplete="username" required placeholder="Email" class="w-full rounded-xl border border-espresso/20 bg-cream/60 px-4 py-3 text-sm font-semibold">
+                <input id="login-pass" type="password" autocomplete="current-password" required placeholder="Password" class="w-full rounded-xl border border-espresso/20 bg-cream/60 px-4 py-3 text-sm font-semibold">
+                <button id="login-btn" type="submit" class="w-full py-3 rounded-xl bg-terracotta hover:bg-terracottaDark text-white font-bold text-sm">Log in</button>
+                <p id="login-msg" class="text-xs font-semibold text-terracotta min-h-[1rem]"></p>
+            </form>
+        </div>
+    </div>
+
+    <div id="app" class="hidden">
+    <header class="bg-espresso text-cream">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-terracotta flex items-center justify-center"><i class="fa-solid fa-store"></i></div>
+                <div>
+                    <p class="font-display font-bold text-lg leading-none">Seller Dashboard</p>
+                    <p id="brand-line" class="text-[11px] uppercase tracking-widest text-garlic font-semibold mt-1">Alisya's Kitchen</p>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <a href="index.html" target="_blank" class="text-xs font-bold bg-white/10 hover:bg-white/20 px-3.5 py-2 rounded-xl flex items-center gap-2"><i class="fa-solid fa-arrow-up-right-from-square"></i> Customer page</a>
+                <button type="button" onclick="logout()" class="text-xs font-bold bg-white/10 hover:bg-white/20 px-3.5 py-2 rounded-xl flex items-center gap-2"><i class="fa-solid fa-right-from-bracket"></i> Log out</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+
+        <!-- Orders -->
+        <section class="space-y-3">
+            <div class="flex items-end justify-between gap-3 flex-wrap">
+                <div>
+                    <h2 class="font-display text-2xl font-bold">Orders</h2>
+                    <p class="text-sm text-espressoMuted">Each order takes trays off the count automatically. Cancel an order to give its trays back.</p>
+                </div>
+                <select id="order-filter" onchange="renderOrders()" class="rounded-xl border border-espresso/20 bg-white px-3 py-2 text-xs font-bold">
+                    <option value="active">New + confirmed</option>
+                    <option value="new">New only</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="cancelled">Cancelled</option>
+                    <option value="all">All</option>
+                </select>
+            </div>
+            <div id="orders" class="space-y-3"></div>
+        </section>
+
+        <!-- Defaults -->
+        <section class="space-y-3">
+            <div>
+                <h2 class="font-display text-2xl font-bold">Usual batch</h2>
+                <p class="text-sm text-espressoMuted">What a new baking day starts with. You can still change every day separately below.</p>
+            </div>
+            <div id="defaults" class="bg-white rounded-2xl border border-espresso/10 shadow-warm p-4 sm:p-5 space-y-4"></div>
+        </section>
+
+        <!-- Days -->
+        <section class="space-y-4">
+            <div class="flex items-end justify-between gap-3 flex-wrap">
+                <div>
+                    <h2 class="font-display text-2xl font-bold">Baking days</h2>
+                    <p class="text-sm text-espressoMuted">Per day: how many Mini and Regular you will make, and the pick-up / delivery times customers can choose.</p>
+                </div>
+                <div class="flex gap-2">
+                    <button type="button" onclick="addWeekend()" class="px-3.5 py-2.5 rounded-xl bg-white border border-espresso/15 hover:bg-parchment text-xs font-bold flex items-center gap-2"><i class="fa-solid fa-calendar-plus text-terracotta"></i> Add next Fri–Sun</button>
+                    <button type="button" onclick="addDrop()" class="px-3.5 py-2.5 rounded-xl bg-terracotta hover:bg-terracottaDark text-white text-xs font-bold flex items-center gap-2"><i class="fa-solid fa-plus"></i> Add day</button>
+                </div>
+            </div>
+            <div id="drops" class="space-y-4"></div>
+            <p id="empty-note" class="hidden text-center text-sm text-espressoMuted py-8 bg-white rounded-2xl border border-dashed border-espresso/20">No baking days yet. Add one above.</p>
+        </section>
+
+        <!-- Telegram -->
+        <section class="bg-white rounded-3xl p-6 shadow-warm border border-espresso/10 space-y-3">
+            <div>
+                <h2 class="font-display text-xl font-bold">Telegram notifications</h2>
+                <p class="text-sm text-espressoMuted">Each new order and receipt also arrives in your Telegram chat. The bot token is kept safely inside Supabase.</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-3">
+                <button type="button" onclick="sendTest()" class="px-4 py-2.5 rounded-xl bg-basil hover:bg-[#244a38] text-white text-sm font-bold flex items-center gap-2"><i class="fa-brands fa-telegram"></i> Send test notification</button>
+                <span id="tg-msg" class="text-xs font-semibold text-espressoMuted"></span>
+            </div>
+        </section>
+
+        <!-- Save bar -->
+        <section class="sticky bottom-3 z-20 bg-espresso text-cream rounded-2xl p-4 shadow-xl flex items-center justify-between gap-3 flex-wrap">
+            <p id="dirty-note" class="text-sm text-cream/70">All changes saved. Customers see the live schedule.</p>
+            <button id="save-btn" type="button" onclick="saveAll()" class="px-5 py-2.5 rounded-xl bg-terracotta hover:bg-terracottaDark text-sm font-bold flex items-center gap-2"><i class="fa-solid fa-cloud-arrow-up"></i> Save changes</button>
+        </section>
+    </main>
+    </div>
+
+    <div id="toast" class="fixed bottom-24 left-1/2 -translate-x-1/2 bg-espresso text-white text-xs font-bold px-4 py-3 rounded-xl shadow-xl opacity-0 transition-opacity pointer-events-none z-50"></div>
+
+    <script src="config.js"></script>
+
+    <script>
+        const $ = id => document.getElementById(id);
+        const PRESET_SLOTS = ['Lunch Batch (12:00 PM – 2:00 PM)', 'Tea-Time Batch (3:30 PM – 5:00 PM)', 'Dinner Batch (6:00 PM – 8:00 PM)'];
+        const SIZES = [['mini', 'Mini'], ['regular', 'Regular']];
+        let sb = null, state = blankState(), removedIds = [], dirty = false, pollTimer = null;
+
+        function blankState() { return { defaults: { miniMade: 15, regularMade: 10, slots: [...PRESET_SLOTS] }, drops: [], orders: [] }; }
+
+        const pad = n => String(n).padStart(2, '0');
+        const iso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+        const parseIso = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+        const dayName = s => ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][parseIso(s).getDay()];
+        const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+        const num = (v, min = 0, max = 999) => Math.max(min, Math.min(max, Math.floor(Number(v)) || 0));
+        const uid = () => (crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 3 | 8)).toString(16); }));
+
+        function toast(msg) { const t = $('toast'); t.textContent = msg; t.style.opacity = 1; clearTimeout(toast._t); toast._t = setTimeout(() => t.style.opacity = 0, 2600); }
+
+        function markDirty() {
+            dirty = true;
+            $('dirty-note').textContent = 'You have unsaved changes — press Save to make them live.';
+            $('dirty-note').className = 'text-sm text-garlic font-semibold';
+        }
+        function markClean() {
+            dirty = false;
+            $('dirty-note').textContent = 'All changes saved. Customers see the live schedule.';
+            $('dirty-note').className = 'text-sm text-cream/70';
+        }
+        window.addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
+
+        // ---------- slots ----------
+        function slotsOf(owner) { return owner < 0 ? state.defaults.slots : state.drops[owner].slots; }
+        function slotsHtml(owner) {
+            const arr = slotsOf(owner);
+            const rows = arr.map((s, k) => `
+                <div class="flex items-center gap-2">
+                    <i class="fa-regular fa-clock text-terracotta text-sm w-4"></i>
+                    <input type="text" value="${esc(s)}" oninput="setSlot(${owner},${k},this.value)" placeholder="e.g., Lunch (12:00 PM – 2:00 PM)" class="flex-1 min-w-0 rounded-lg border border-espresso/20 bg-cream/60 px-3 py-2 text-sm font-semibold">
+                    <button type="button" onclick="delSlot(${owner},${k})" aria-label="Remove time" class="w-8 h-8 rounded-lg text-espressoMuted hover:bg-red-50 hover:text-terracotta"><i class="fa-solid fa-xmark"></i></button>
+                </div>`).join('');
+            const chips = PRESET_SLOTS.filter(p => !arr.includes(p)).map(p =>
+                `<button type="button" onclick="addSlot(${owner},${JSON.stringify(p).replace(/"/g, '&quot;')})" class="text-[11px] font-bold px-2.5 py-1 rounded-full bg-parchment hover:bg-espresso/10">+ ${esc(p.split(' (')[0])}</button>`).join('');
+            return `
+                <div class="space-y-2">
+                    <p class="text-xs font-bold uppercase tracking-wider text-espressoMuted">Time slots customers can choose</p>
+                    ${rows || '<p class="text-xs text-terracotta font-semibold">No time slots — customers will see your usual batch times.</p>'}
+                    <div class="flex flex-wrap gap-2 pt-1">${chips}<button type="button" onclick="addSlot(${owner},'')" class="text-[11px] font-bold px-2.5 py-1 rounded-full bg-terracotta text-white">+ Custom time</button></div>
+                </div>`;
+        }
+        function setSlot(owner, k, val) { slotsOf(owner)[k] = val; markDirty(); }
+        function delSlot(owner, k) { slotsOf(owner).splice(k, 1); markDirty(); render(); }
+        function addSlot(owner, text) { slotsOf(owner).push(text); markDirty(); render(); }
+
+        // ---------- render: usual batch + days ----------
+        function renderDefaults() {
+            const d = state.defaults;
+            $('defaults').innerHTML = `
+                <div class="flex flex-wrap items-center gap-x-6 gap-y-3">
+                    <label class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-espressoMuted">Mini to make
+                        <input type="number" min="0" max="999" value="${d.miniMade}" onchange="setDefault('miniMade',this.value)" class="num rounded-lg border border-espresso/20 bg-cream/60 py-2 text-sm font-bold text-espresso"></label>
+                    <label class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-espressoMuted">Regular to make
+                        <input type="number" min="0" max="999" value="${d.regularMade}" onchange="setDefault('regularMade',this.value)" class="num rounded-lg border border-espresso/20 bg-cream/60 py-2 text-sm font-bold text-espresso"></label>
+                </div>
+                ${slotsHtml(-1)}`;
+        }
+        function setDefault(key, v) { state.defaults[key] = num(v); markDirty(); }
+
+        function cardHtml(d, i, todayIso) {
+            const past = d.date < todayIso;
+            const sizeBlocks = SIZES.map(([id, label]) => `
+                <div class="rounded-xl bg-cream/70 border border-espresso/10 p-3 space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <p class="font-bold text-sm">${label}</p>
+                        <span id="badge-${id}-${i}" class="text-[11px] font-bold px-2 py-0.5 rounded-full"></span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[11px] font-bold uppercase tracking-wider text-espressoMuted w-24">Making</span>
+                        <input type="number" min="0" max="999" value="${d[id].made}" onchange="setMade(${i},'${id}',this.value)" class="num rounded-lg border border-espresso/20 bg-white py-1.5 text-sm font-bold">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[11px] font-bold uppercase tracking-wider text-espressoMuted w-24">Sold online</span>
+                        <span id="online-${id}-${i}" class="text-sm font-bold"></span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[11px] font-bold uppercase tracking-wider text-espressoMuted w-24">Sold offline</span>
+                        <button type="button" onclick="bump(${i},'${id}',-1)" aria-label="One less" class="w-8 h-8 rounded-lg bg-white border border-espresso/15 hover:bg-parchment"><i class="fa-solid fa-minus text-xs"></i></button>
+                        <input id="offline-${id}-${i}" type="number" min="0" max="999" value="${d[id].offline}" onchange="setOffline(${i},'${id}',this.value)" class="num rounded-lg border border-espresso/20 bg-white py-1.5 text-sm font-bold">
+                        <button type="button" onclick="bump(${i},'${id}',1)" aria-label="One more" class="w-8 h-8 rounded-lg bg-terracotta hover:bg-terracottaDark text-white"><i class="fa-solid fa-plus text-xs"></i></button>
+                    </div>
+                    <div class="w-full h-2 bg-parchment rounded-full overflow-hidden"><div id="bar-${id}-${i}" class="h-full bg-gradient-to-r from-garlic to-terracotta rounded-full"></div></div>
+                    <p id="sum-${id}-${i}" class="text-[11px] text-espressoMuted"></p>
+                </div>`).join('');
+            return `
+            <div class="bg-white rounded-2xl border border-espresso/10 shadow-warm p-4 sm:p-5 space-y-4 ${past || !d.open ? 'opacity-70' : ''}">
+                <div class="flex items-center justify-between gap-3 flex-wrap">
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <input type="date" value="${esc(d.date)}" onchange="setDate(${i},this.value)" class="rounded-xl border border-espresso/20 bg-cream/60 px-3 py-2 text-sm font-bold">
+                        <span class="text-sm font-semibold text-espressoMuted">${dayName(d.date)}${past ? ' · past' : ''}</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <label class="flex items-center gap-2 text-xs font-bold cursor-pointer"><input type="checkbox" ${d.open ? 'checked' : ''} onchange="setOpen(${i},this.checked)" class="w-4 h-4 accent-[#B83A2D]"> Open for orders</label>
+                        <button type="button" onclick="removeDrop(${i})" aria-label="Delete day" class="w-8 h-8 rounded-lg text-espressoMuted hover:bg-red-50 hover:text-terracotta"><i class="fa-regular fa-trash-can"></i></button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">${sizeBlocks}</div>
+                ${slotsHtml(i)}
+            </div>`;
+        }
+
+        function paint(i) {
+            const d = state.drops[i];
+            SIZES.forEach(([id]) => {
+                const made = d[id].made, sold = d[id].online + d[id].offline, left = Math.max(0, made - sold);
+                const badge = $(`badge-${id}-${i}`);
+                if (!badge) return;
+                const sOut = made > 0 && left === 0, none = made === 0;
+                badge.textContent = none ? 'Not baking' : sOut ? 'Sold out' : `${left} left`;
+                badge.className = 'text-[11px] font-bold px-2 py-0.5 rounded-full ' + (none ? 'bg-espresso/10 text-espressoMuted' : sOut ? 'bg-terracotta/10 text-terracotta' : 'bg-basilLight text-basil');
+                $(`bar-${id}-${i}`).style.width = (made ? Math.round(left / made * 100) : 0) + '%';
+                $(`online-${id}-${i}`).textContent = d[id].online;
+                $(`sum-${id}-${i}`).textContent = `${sold} sold · ${left} left of ${made}` + (sold > made ? ' (oversold!)' : '');
+            });
+        }
+
+        function render() {
+            state.drops.sort((a, b) => a.date.localeCompare(b.date));
+            renderDefaults();
+            const todayIso = iso(new Date());
+            $('empty-note').classList.toggle('hidden', state.drops.length > 0);
+            $('drops').innerHTML = state.drops.map((d, i) => cardHtml(d, i, todayIso)).join('');
+            state.drops.forEach((_, i) => paint(i));
+            renderOrders();
+        }
+
+        // ---------- edits ----------
+        function setDate(i, v) { if (!v) return; state.drops[i].date = v; markDirty(); render(); }
+        function setOpen(i, v) { state.drops[i].open = !!v; markDirty(); render(); }
+        function setMade(i, id, v) { state.drops[i][id].made = num(v); markDirty(); paint(i); }
+        function setOffline(i, id, v) { state.drops[i][id].offline = num(v); $(`offline-${id}-${i}`).value = state.drops[i][id].offline; markDirty(); paint(i); }
+        function bump(i, id, delta) {
+            const d = state.drops[i][id]; d.offline = Math.max(0, Math.min(999, d.offline + delta));
+            $(`offline-${id}-${i}`).value = d.offline; markDirty(); paint(i);
+        }
+        function removeDrop(i) {
+            const d = state.drops[i];
+            if (d.regular.online > 0 || d.mini.online > 0) { toast('This day has orders. Untick “Open for orders” instead of deleting.'); return; }
+            if (!confirm('Delete this baking day?')) return;
+            if (d.saved) removedIds.push(d.id);
+            state.drops.splice(i, 1); markDirty(); render();
+        }
+        function newDrop(date) {
+            const df = state.defaults;
+            return { id: uid(), saved: false, date, open: true, slots: [...df.slots],
+                mini: { made: df.miniMade, online: 0, offline: 0 }, regular: { made: df.regularMade, online: 0, offline: 0 } };
+        }
+        function addDrop() {
+            const last = state.drops.length ? parseIso(state.drops[state.drops.length - 1].date) : new Date();
+            const next = new Date(last); next.setDate(next.getDate() + 1);
+            state.drops.push(newDrop(iso(next))); markDirty(); render();
+        }
+        function addWeekend() {
+            const have = new Set(state.drops.map(d => d.date));
+            const cur = state.drops.length ? parseIso(state.drops[state.drops.length - 1].date) : new Date();
+            let added = 0;
+            for (let n = 0; n < 21 && added < 3; n++) {
+                cur.setDate(cur.getDate() + 1);
+                const dow = cur.getDay();
+                if ((dow === 5 || dow === 6 || dow === 0) && !have.has(iso(cur))) { state.drops.push(newDrop(iso(cur))); added++; }
+            }
+            markDirty(); render();
+        }
+
+        // ---------- load / save ----------
+        const cleanSlots = a => a.map(s => String(s).trim()).filter(Boolean);
+
+        function applyOnline(rows) {
+            const by = {};
+            rows.forEach(o => { const b = by[o.drop_id] = by[o.drop_id] || { mini: 0, regular: 0 }; b.mini += o.mini; b.regular += o.regular; });
+            state.drops.forEach(d => { const b = by[d.id] || { mini: 0, regular: 0 }; d.mini.online = b.mini; d.regular.online = b.regular; });
+        }
+
+        async function loadAll() {
+            const [s, d, active, ords] = await Promise.all([
+                sb.from('settings').select('*').eq('id', 1).single(),
+                sb.from('drops').select('*').order('date'),
+                sb.from('orders').select('drop_id,mini,regular').neq('status', 'cancelled'),
+                sb.from('orders').select('*').order('created_at', { ascending: false }).limit(300)
+            ]);
+            const err = s.error || d.error || active.error || ords.error;
+            if (err) { toast('Could not load: ' + err.message); return; }
+            state = blankState();
+            state.defaults = { miniMade: s.data.mini_made, regularMade: s.data.regular_made, slots: Array.isArray(s.data.slots) ? s.data.slots : [] };
+            state.drops = d.data.map(r => ({
+                id: r.id, saved: true, date: r.date, open: r.open, slots: Array.isArray(r.slots) ? r.slots : [],
+                mini: { made: r.mini_made, online: 0, offline: r.mini_offline },
+                regular: { made: r.regular_made, online: 0, offline: r.regular_offline }
+            }));
+            applyOnline(active.data);
+            state.orders = ords.data;
+            removedIds = [];
+            render(); markClean();
+        }
+
+        async function saveAll() {
+            const btn = $('save-btn'); btn.disabled = true;
+            try {
+                const dates = state.drops.map(d => d.date);
+                if (new Set(dates).size !== dates.length) { toast('Two baking days have the same date. Please fix it first.'); return; }
+                let r = await sb.from('settings').update({
+                    mini_made: state.defaults.miniMade, regular_made: state.defaults.regularMade, slots: cleanSlots(state.defaults.slots)
+                }).eq('id', 1);
+                if (r.error) throw r.error;
+                if (removedIds.length) { r = await sb.from('drops').delete().in('id', removedIds); if (r.error) throw r.error; }
+                if (state.drops.length) {
+                    r = await sb.from('drops').upsert(state.drops.map(d => ({
+                        id: d.id, date: d.date, open: d.open, slots: cleanSlots(d.slots),
+                        mini_made: d.mini.made, regular_made: d.regular.made,
+                        mini_offline: d.mini.offline, regular_offline: d.regular.offline
+                    })), { onConflict: 'id' });
+                    if (r.error) throw r.error;
+                }
+                await loadAll();
+                toast('Saved — customers see it now');
+            } catch (e) {
+                toast('Could not save: ' + (e.message || 'unknown error'));
+            } finally { btn.disabled = false; }
+        }
+
+        // ---------- orders ----------
+        const dateOf = id => { const d = state.drops.find(x => x.id === id); return d ? d.date : '?'; };
+        const waLink = p => { let n = String(p).replace(/\D/g, ''); if (n.startsWith('0')) n = '6' + n; return 'https://wa.me/' + n; };
+        const STATUS = { new: ['New', 'bg-garlic/20 text-garlic'], confirmed: ['Confirmed', 'bg-basilLight text-basil'], cancelled: ['Cancelled', 'bg-espresso/10 text-espressoMuted'] };
+
+        function renderOrders() {
+            const f = $('order-filter').value;
+            const list = state.orders.filter(o => f === 'all' ? true : f === 'active' ? o.status !== 'cancelled' : o.status === f);
+            $('orders').innerHTML = list.length ? list.map(o => {
+                const [label, cls] = STATUS[o.status] || STATUS.new;
+                const items = [o.mini ? `${o.mini}× Mini` : '', o.regular ? `${o.regular}× Regular` : ''].filter(Boolean).join(' + ');
+                const when = new Date(o.created_at).toLocaleString('en-MY', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
+                const d = dateOf(o.drop_id);
+                return `
+                <div class="bg-white rounded-2xl border border-espresso/10 shadow-warm p-4 space-y-3 ${o.status === 'cancelled' ? 'opacity-60' : ''}">
+                    <div class="flex items-start justify-between gap-3 flex-wrap">
+                        <div>
+                            <p class="font-bold text-sm">${esc(o.code)} <span class="font-normal text-espressoMuted">· ${esc(when)}</span></p>
+                            <p class="text-sm font-semibold">${esc(o.name)} · <a class="text-basil underline" target="_blank" rel="noopener" href="${waLink(o.phone)}">${esc(o.phone)}</a></p>
+                        </div>
+                        <span class="text-[11px] font-bold px-2.5 py-1 rounded-full ${cls}">${label}</span>
+                    </div>
+                    <div class="text-sm space-y-0.5">
+                        <p><b>${esc(items)}</b> · ${esc(CONFIG.currency)} ${Number(o.total).toFixed(2)}</p>
+                        <p class="text-espressoMuted">${esc(d !== '?' ? dayName(d) + ' ' + d : '')} · ${esc(o.slot)} · ${esc(o.method)}</p>
+                        ${o.address ? `<p class="text-espressoMuted">📍 ${esc(o.address)}</p>` : ''}
+                        ${o.notes ? `<p class="text-espressoMuted">📝 ${esc(o.notes)}</p>` : ''}
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" onclick="viewReceipt('${esc(o.receipt_path)}')" class="px-3 py-2 rounded-xl bg-parchment hover:bg-espresso/10 text-xs font-bold"><i class="fa-regular fa-image"></i> Receipt</button>
+                        ${o.status === 'new' ? `<button type="button" onclick="setStatus('${o.id}','confirmed')" class="px-3 py-2 rounded-xl bg-basil text-white text-xs font-bold"><i class="fa-solid fa-check"></i> Payment OK</button>` : ''}
+                        ${o.status !== 'cancelled' ? `<button type="button" onclick="cancelOrder('${o.id}')" class="px-3 py-2 rounded-xl bg-white border border-espresso/15 hover:bg-red-50 text-terracotta text-xs font-bold">Cancel</button>` : `<button type="button" onclick="setStatus('${o.id}','new')" class="px-3 py-2 rounded-xl bg-white border border-espresso/15 text-xs font-bold">Restore</button>`}
+                    </div>
+                </div>`;
+            }).join('') : '<p class="text-center text-sm text-espressoMuted py-8 bg-white rounded-2xl border border-dashed border-espresso/20">No orders here yet.</p>';
+        }
+
+        async function viewReceipt(path) {
+            const w = window.open('', '_blank');
+            const { data, error } = await sb.storage.from('receipts').createSignedUrl(path, 300);
+            if (error || !data) { if (w) w.close(); toast('Could not open receipt'); return; }
+            if (w) w.location = data.signedUrl; else toast('Allow pop-ups to view receipts');
+        }
+        async function setStatus(id, status) {
+            const { error } = await sb.from('orders').update({ status }).eq('id', id);
+            if (error) { toast('Could not update: ' + error.message); return; }
+            await refreshOrders(); toast(status === 'cancelled' ? 'Order cancelled — trays returned' : 'Updated');
+        }
+        function cancelOrder(id) { if (confirm('Cancel this order? Its trays go back on sale.')) setStatus(id, 'cancelled'); }
+
+        // Refresh orders + online counts without touching unsaved edits
+        async function refreshOrders() {
+            const [active, ords] = await Promise.all([
+                sb.from('orders').select('drop_id,mini,regular').neq('status', 'cancelled'),
+                sb.from('orders').select('*').order('created_at', { ascending: false }).limit(300)
+            ]);
+            if (active.error || ords.error) return;
+            state.orders = ords.data; applyOnline(active.data);
+            state.drops.forEach((_, i) => paint(i)); renderOrders();
+        }
+
+        // ---------- Telegram test ----------
+        async function sendTest() {
+            const msg = $('tg-msg'); msg.textContent = 'Sending...';
+            try {
+                const { data, error } = await sb.functions.invoke('place-order', { body: { action: 'test' } });
+                if (error) throw error;
+                msg.textContent = data && data.ok ? 'Sent! Check your Telegram.' : `Failed: ${(data && data.error) || 'unknown error'}`;
+            } catch (e) { msg.textContent = 'Could not reach the server function. Is place-order deployed?'; }
+        }
+
+        // ---------- auth ----------
+        function showLogin(msg) {
+            $('app').classList.add('hidden'); $('login').classList.remove('hidden');
+            $('login-msg').textContent = msg || '';
+            clearInterval(pollTimer);
+        }
+        async function showApp() {
+            $('login').classList.add('hidden'); $('app').classList.remove('hidden');
+            await loadAll();
+            clearInterval(pollTimer);
+            pollTimer = setInterval(() => { if (!document.hidden) refreshOrders(); }, 30000);
+        }
+        async function logout() { if (dirty && !confirm('You have unsaved changes. Log out anyway?')) return; dirty = false; await sb.auth.signOut(); }
+
+        async function init() {
+            $('brand-line').textContent = CONFIG.brandName; $('login-brand').textContent = CONFIG.brandName;
+            if (!CONFIG.supabaseUrl || CONFIG.supabaseUrl.startsWith('PASTE') || !CONFIG.supabaseAnonKey || CONFIG.supabaseAnonKey.startsWith('PASTE')) {
+                showLogin('Add your Supabase URL and key to config.js first.'); $('login-btn').disabled = true; return;
+            }
+            sb = supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseAnonKey);
+            $('login-form').addEventListener('submit', async e => {
+                e.preventDefault(); $('login-btn').disabled = true; $('login-msg').textContent = '';
+                const { error } = await sb.auth.signInWithPassword({ email: $('login-email').value.trim(), password: $('login-pass').value });
+                $('login-btn').disabled = false;
+                if (error) $('login-msg').textContent = 'Wrong email or password.';
+            });
+            sb.auth.onAuthStateChange((event, session) => {
+                if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') { if (session) { if (!$('app').classList.contains('hidden')) return; showApp(); } else showLogin(); }
+                if (event === 'SIGNED_OUT') showLogin();
+            });
+        }
+        init();
+    </script>
+</body>
+</html>
