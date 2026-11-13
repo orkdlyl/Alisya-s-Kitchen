@@ -420,7 +420,7 @@
         async function sendTest() {
             const msg = $('tg-msg'); msg.textContent = 'Sending...';
             try {
-                const { data, error } = await sb.functions.invoke('place-order', { body: { action: 'test' } });
+                const { data, error } = await sb.functions.invoke(CONFIG.functionName || 'smart-api', { body: { action: 'test' } });
                 if (error) {
                     let detail = error.message || 'unknown error';
                     try { if (error.context && error.context.json) { const j = await error.context.json(); detail = j.error || j.message || detail; } } catch (e) {}
