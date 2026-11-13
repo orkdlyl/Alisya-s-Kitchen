@@ -9,8 +9,8 @@ const CONFIG = {
     currency: 'RM',
 
     // Supabase > Project Settings > API
-    supabaseUrl:     'PASTE_PROJECT_URL_HERE',        // e.g. https://abcdxyz.supabase.co
-    supabaseAnonKey: 'PASTE_ANON_PUBLIC_KEY_HERE',    // the "anon" / "publishable" key (NOT service_role)
+    supabaseUrl:     'https://txnqtrifknqtmbwdehah.supabase.co',        // e.g. https://abcdxyz.supabase.co
+    supabaseAnonKey: 'sb_publishable_bBid7fbSsnRPFrc3GVk8sA_FwL_Y3-D',    // the "anon" / "publishable" key (NOT service_role)
 
     // Payment details shown to customers
     duitnowQrImage: 'duitnow-qr.png',   // save your QR image next to index.html
