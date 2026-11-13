@@ -318,8 +318,8 @@
                             </button>
                             <button type="button" id="btn-pay-cash" onclick="setPaymentMethod('cash')" class="p-3.5 rounded-2xl border-2 border-espresso/15 hover:border-espresso/30 bg-white text-left transition-all">
                                 <i class="fa-solid fa-money-bill-wave text-espressoMuted text-lg"></i>
-                                <p class="font-bold text-sm text-espresso mt-1">Cash</p>
-                                <p class="text-[11px] text-espressoMuted">Pay on pickup / delivery</p>
+                                <p id="cash-title" class="font-bold text-sm text-espresso mt-1">Cash</p>
+                                <p id="cash-sub" class="text-[11px] text-espressoMuted">No receipt needed</p>
                             </button>
                         </div>
                     </div>
@@ -668,6 +668,9 @@
             $('btn-pay-online').className = m === 'online' ? on : off;
             $('btn-pay-cash').className = m === 'cash' ? on : off;
             $('online-block').classList.toggle('hidden', m !== 'online');
+            const isDel = collectionMethod === 'Delivery';
+            $('cash-title').textContent = isDel ? 'Cash on Delivery' : 'Cash on Pickup';
+            $('cash-sub').textContent = 'No receipt needed';
             $('cash-block').classList.toggle('hidden', m !== 'cash');
             $('cash-note').textContent = collectionMethod === 'Delivery'
                 ? 'No receipt needed. Please prepare the exact amount and pay in cash to the rider when your order arrives.'
