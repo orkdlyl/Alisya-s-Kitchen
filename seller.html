@@ -421,9 +421,13 @@
             const msg = $('tg-msg'); msg.textContent = 'Sending...';
             try {
                 const { data, error } = await sb.functions.invoke('place-order', { body: { action: 'test' } });
-                if (error) throw error;
+                if (error) {
+                    let detail = error.message || 'unknown error';
+                    try { if (error.context && error.context.json) { const j = await error.context.json(); detail = j.error || j.message || detail; } } catch (e) {}
+                    throw new Error(detail);
+                }
                 msg.textContent = data && data.ok ? 'Sent! Check your Telegram.' : `Failed: ${(data && data.error) || 'unknown error'}`;
-            } catch (e) { msg.textContent = 'Could not reach the server function. Is place-order deployed?'; }
+            } catch (e) { msg.textContent = 'Failed: ' + (e.message || e); }
         }
 
         // ---------- auth ----------
