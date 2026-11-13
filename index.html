@@ -680,7 +680,7 @@
                 let data = {}; try { data = await res.json(); } catch (e) {}
                 if (!data.ok) {
                     if (data.stock) refreshSchedule();
-                    showPayError(data.error || 'Sorry, we could not send your order. Please try again.');
+                    showPayError(data.error || `Sorry, we could not send your order (server code ${res.status}). Please try again.`);
                     return;
                 }
                 const { totalAmount } = calculateOrderTotals();
@@ -691,7 +691,7 @@
                 $('success-view').classList.remove('hidden');
                 refreshSchedule();
             } catch (err) {
-                showPayError('Sorry, we could not send your order. Please check your connection and try again.');
+                showPayError('Sorry, we could not send your order. Please check your connection and try again. (' + ((err && err.message) || err) + ')');
             } finally {
                 submitting = false;
                 btn.disabled = false; $('submit-label').textContent = 'Submit Order';
