@@ -676,7 +676,7 @@
                 fd.append('mini', cart.mini || 0);
                 fd.append('regular', cart.regular || 0);
                 fd.append('receipt', receiptFile, receiptFile.name || 'receipt.jpg');
-                const res = await fetch(`${CONFIG.supabaseUrl}/functions/v1/place-order`, { method: 'POST', headers: SB_HEADERS(), body: fd });
+                const res = await fetch(`${CONFIG.supabaseUrl}/functions/v1/${CONFIG.functionName || 'smart-api'}`, { method: 'POST', headers: SB_HEADERS(), body: fd });
                 let data = {}; try { data = await res.json(); } catch (e) {}
                 if (!data.ok) {
                     if (data.stock) refreshSchedule();
