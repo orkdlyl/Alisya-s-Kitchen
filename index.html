@@ -155,7 +155,7 @@
                             <button type="button" id="btn-pickup" onclick="setCollectionMethod('Self-Pickup')" class="p-4 rounded-2xl border-2 border-terracotta bg-terracotta/5 text-left transition-all">
                                 <div class="flex items-center justify-between mb-1"><i class="fa-solid fa-bag-shopping text-terracotta text-lg"></i><span class="text-[11px] font-bold uppercase px-2 py-0.5 rounded bg-basilLight text-basil">Free</span></div>
                                 <p class="font-bold text-sm text-espresso">Self-Pickup</p>
-                                <p class="text-xs text-espressoMuted">Collect warm at our kitchen</p>
+                                <p class="text-xs text-espressoMuted">Collect warm at our home</p>
                             </button>
                             <button type="button" id="btn-delivery" onclick="setCollectionMethod('Delivery')" class="p-4 rounded-2xl border-2 border-espresso/15 hover:border-espresso/30 bg-white text-left transition-all">
                                 <div class="flex items-center justify-between mb-1"><i class="fa-solid fa-motorcycle text-espressoMuted text-lg"></i><span class="text-[11px] font-bold uppercase px-2 py-0.5 rounded bg-parchment text-espressoMuted">Free – RM 4</span></div>
@@ -171,8 +171,20 @@
                                 <option value="Dinner Batch (6:00 PM – 8:00 PM)">Dinner Batch (6:00 PM – 8:00 PM)</option>
                             </select>
                         </div>
-                        <div id="delivery-address-wrapper" class="pt-1 space-y-3">
-                            <p class="text-xs font-semibold text-espressoMuted">Delivery areas &amp; fees (only needed if you choose Doorstep Delivery)</p>
+
+                        <!-- Shown for Self-Pickup only -->
+                        <div id="pickup-address-wrapper" class="pt-1">
+                            <div class="bg-basilLight border border-basil/20 rounded-2xl p-4 flex items-start gap-3">
+                                <i class="fa-solid fa-location-dot text-basil text-xl mt-0.5"></i>
+                                <div>
+                                    <p class="text-[11px] font-bold uppercase tracking-wider text-basil">Pickup Address</p>
+                                    <p id="pickup-address-text" class="text-sm font-bold text-espresso leading-relaxed"></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Shown for Delivery only -->
+                        <div id="delivery-address-wrapper" class="hidden pt-1 space-y-3">
                             <div class="space-y-1.5">
                                 <label for="delivery-area" class="block text-xs font-bold uppercase tracking-wider text-terracotta">Delivery Area <span>*</span></label>
                                 <select id="delivery-area" onchange="hideError(); updateOrderSummary();" class="w-full rounded-xl border border-espresso/20 bg-cream/60 px-4 py-3 text-sm font-semibold text-espresso focus:outline-none focus:border-terracotta"></select>
@@ -324,7 +336,7 @@
                         </div>
                     </div>
 
-                    <!-- Online payment block -->
+                    <!-- Online payment block (QR + receipt upload) — hidden when Cash is chosen -->
                     <div id="online-block" class="space-y-5">
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
                             <div class="bg-white border-2 border-dashed border-espresso/20 rounded-2xl p-3 flex items-center justify-center aspect-square">
@@ -391,12 +403,19 @@
                     <p id="success-id" class="font-mono text-xl font-extrabold text-terracotta"></p>
                     <p id="success-detail" class="text-xs text-espressoMuted pt-1"></p>
                 </div>
+                <div id="success-pickup" class="hidden bg-basilLight rounded-2xl p-4 text-sm text-left flex items-start gap-3">
+                    <i class="fa-solid fa-location-dot text-basil text-lg mt-0.5"></i>
+                    <div>
+                        <p class="text-[11px] font-bold uppercase tracking-wider text-basil">Pickup Address</p>
+                        <p id="success-pickup-text" class="font-bold text-espresso"></p>
+                    </div>
+                </div>
                 <button type="button" onclick="finishOrder()" class="w-full py-3.5 rounded-2xl bg-terracotta hover:bg-terracottaDark text-white font-bold">Done</button>
             </div>
         </div>
     </div>
 
-    <!-- Seller settings (Telegram, bank details) live in config.js -->
+    <!-- Seller settings (Telegram, bank details, pickupAddress) live in config.js -->
     <script src="config.js"></script>
     <script>
         // Menu items (no pictures / descriptions). Fries have no stock limit.
@@ -415,6 +434,9 @@
             { id:'kundang', name:'Kundang', fee:4 },
             { id:'desa-puteri', name:'Desa Puteri', fee:0 }
         ];
+
+        // Home pickup address: set CONFIG.pickupAddress in config.js (or edit the fallback below)
+        const PICKUP_ADDRESS = (typeof CONFIG !== 'undefined' && CONFIG.pickupAddress) ? CONFIG.pickupAddress : 'PASTE YOUR HOME ADDRESS HERE (set pickupAddress in config.js)';
 
         let cart = { mini: 0, regular: 1, fries: 0 };
         let openDropDates = [];
@@ -580,9 +602,13 @@
             collectionMethod = method;
             const on = 'p-4 rounded-2xl border-2 border-terracotta bg-terracotta/5 text-left transition-all';
             const off = 'p-4 rounded-2xl border-2 border-espresso/15 hover:border-espresso/30 bg-white text-left transition-all';
-            $('btn-pickup').className = method === 'Self-Pickup' ? on : off;
-            $('btn-delivery').className = method === 'Delivery' ? on : off;
-            $('summary-delivery-row').classList.toggle('hidden', method !== 'Delivery');
+            const isDel = method === 'Delivery';
+            $('btn-pickup').className = !isDel ? on : off;
+            $('btn-delivery').className = isDel ? on : off;
+            // Delivery area + address only for Delivery; home pickup address only for Self-Pickup
+            $('delivery-address-wrapper').classList.toggle('hidden', !isDel);
+            $('pickup-address-wrapper').classList.toggle('hidden', isDel);
+            $('summary-delivery-row').classList.toggle('hidden', !isDel);
             $('summary-method-badge').textContent = method;
             hideError(); updateOrderSummary();
         }
@@ -667,17 +693,19 @@
             const off = 'p-3.5 rounded-2xl border-2 border-espresso/15 hover:border-espresso/30 bg-white text-left transition-all';
             $('btn-pay-online').className = m === 'online' ? on : off;
             $('btn-pay-cash').className = m === 'cash' ? on : off;
+            // Cash: hide QR + receipt upload completely
             $('online-block').classList.toggle('hidden', m !== 'online');
             const isDel = collectionMethod === 'Delivery';
             $('cash-title').textContent = isDel ? 'Cash on Delivery' : 'Cash on Pickup';
             $('cash-sub').textContent = 'No receipt needed';
             $('cash-block').classList.toggle('hidden', m !== 'cash');
-            $('cash-note').textContent = collectionMethod === 'Delivery'
+            $('cash-note').textContent = isDel
                 ? 'No receipt needed. Please prepare the exact amount and pay in cash to the rider when your order arrives.'
                 : 'No receipt needed. Please prepare the exact amount and pay in cash when you collect your order.';
             $('pay-footnote').textContent = m === 'online'
                 ? "Your order and receipt go straight to our kitchen. We'll verify your payment and your slot is confirmed."
                 : 'Your order goes straight to our kitchen. Please pay in cash on collection / delivery.';
+            $('submit-label').textContent = m === 'cash' ? 'Place Order' : 'Submit Order';
             $('pay-error-box').classList.add('hidden');
         }
 
@@ -719,6 +747,7 @@
         async function submitOrder() {
             if (submitting) return;
             const isCash = paymentMethod === 'cash';
+            // Receipt is only required for online payment
             if (!isCash && !receiptFile) { showPayError('Please upload your payment receipt first, or choose Cash.'); return; }
             if (!sbReady()) { showPayError('Ordering is not set up yet (seller: add your Supabase details in config.js).'); return; }
             const drop = openDropDates[selectedDropIndex];
@@ -731,13 +760,14 @@
 
             try {
                 const { grandTotal, deliveryFee } = calculateOrderTotals();
-                const area = getSelectedArea();
+                const isDel = collectionMethod === 'Delivery';
+                const area = isDel ? getSelectedArea() : null;
 
                 // Extra order details are added to the notes so the seller always sees them
                 const extra = [];
                 if (cart.fries) extra.push(`Loaded Beef Fries x${cart.fries}`);
                 extra.push(`Payment: ${isCash ? 'CASH' : 'DuitNow/Transfer'}`);
-                if (collectionMethod === 'Delivery' && area) extra.push(`Delivery area: ${area.name} (fee ${deliveryFee ? CONFIG.currency + ' ' + deliveryFee : 'Free'})`);
+                if (isDel && area) extra.push(`Delivery area: ${area.name} (fee ${deliveryFee ? CONFIG.currency + ' ' + deliveryFee : 'Free'})`);
                 extra.push(`Total: ${money(grandTotal)}`);
                 const notes = [$('special-notes').value.trim(), ...extra].filter(Boolean).join(' | ');
 
@@ -745,7 +775,7 @@
                 fd.append('drop_id', drop.id);
                 fd.append('slot', $('time-slot').value);
                 fd.append('method', collectionMethod);
-                fd.append('address', collectionMethod === 'Delivery' ? $('delivery-address').value.trim() : '');
+                fd.append('address', isDel ? $('delivery-address').value.trim() : '');
                 fd.append('name', $('customer-name').value.trim());
                 fd.append('phone', $('customer-phone').value.trim());
                 fd.append('notes', notes);
@@ -765,12 +795,15 @@
                     showPayError(data.error || `Sorry, we could not send your order (server code ${res.status}). Please try again.`);
                     return;
                 }
+                const nm = esc($('customer-name').value.trim());
                 $('success-name').textContent = $('customer-name').value.trim();
                 $('success-message').innerHTML = isCash
-                    ? `Thank you, <strong>${esc($('customer-name').value.trim())}</strong>. We've got your order. Please pay <strong>cash</strong> ${collectionMethod === 'Delivery' ? 'to the rider on delivery' : 'when you collect'}.`
-                    : `Thank you, <strong>${esc($('customer-name').value.trim())}</strong>. We've got your order and payment receipt. We'll verify the payment and prepare your order fresh for your drop day.`;
+                    ? `Thank you, <strong>${nm}</strong>. We've got your order. Please pay <strong>cash</strong> ${isDel ? 'to the rider on delivery' : 'when you collect'}.`
+                    : `Thank you, <strong>${nm}</strong>. We've got your order and payment receipt. We'll verify the payment and prepare your order fresh for your drop day.`;
                 $('success-id').textContent = data.code;
                 $('success-detail').textContent = `${drop.fullLabel} • ${money(grandTotal)} ${isCash ? 'to pay in cash' : 'paid'}`;
+                $('success-pickup-text').textContent = PICKUP_ADDRESS;
+                $('success-pickup').classList.toggle('hidden', isDel);
                 $('pay-view').classList.add('hidden');
                 $('success-view').classList.remove('hidden');
                 refreshSchedule();
@@ -778,7 +811,7 @@
                 showPayError('Sorry, we could not send your order. Please check your connection and try again. (' + ((err && err.message) || err) + ')');
             } finally {
                 submitting = false;
-                btn.disabled = false; $('submit-label').textContent = 'Submit Order';
+                btn.disabled = false; $('submit-label').textContent = paymentMethod === 'cash' ? 'Place Order' : 'Submit Order';
                 $('submit-icon').className = 'fa-solid fa-paper-plane';
             }
         }
@@ -815,6 +848,8 @@
 
         window.addEventListener('DOMContentLoaded', async () => {
             populateDeliveryAreas();
+            $('pickup-address-text').textContent = PICKUP_ADDRESS;
+            setCollectionMethod('Self-Pickup');
             renderMenu(); updateOrderSummary(); startCountdown();
             openDropDates = await loadDropDates();
             const firstFree = openDropDates.findIndex(d => !d.soldOut);
