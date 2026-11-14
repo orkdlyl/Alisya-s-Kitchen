@@ -744,6 +744,20 @@
 
         function showPayError(m) { $('pay-error-text').textContent = m; $('pay-error-box').classList.remove('hidden'); }
 
+        // Auto-generated image used in place of a receipt for cash orders (customer never sees or uploads it)
+        function makeCashSlip(total) {
+            return new Promise(resolve => {
+                const c = document.createElement('canvas'); c.width = 600; c.height = 300;
+                const g = c.getContext('2d');
+                g.fillStyle = '#E8F0EC'; g.fillRect(0, 0, 600, 300);
+                g.fillStyle = '#2E5A44'; g.textAlign = 'center';
+                g.font = 'bold 48px sans-serif'; g.fillText('CASH ORDER', 300, 120);
+                g.font = '28px sans-serif'; g.fillText('No receipt - collect ' + money(total), 300, 180);
+                g.font = '22px sans-serif'; g.fillText('Pay in cash on ' + (collectionMethod === 'Delivery' ? 'delivery' : 'pickup'), 300, 225);
+                c.toBlob(b => resolve(b), 'image/png');
+            });
+        }
+
         async function submitOrder() {
             if (submitting) return;
             const isCash = paymentMethod === 'cash';
@@ -786,7 +800,13 @@
                 fd.append('delivery_area', area ? area.name : '');
                 fd.append('delivery_fee', deliveryFee);
                 fd.append('total', grandTotal.toFixed(2));
-                if (!isCash) fd.append('receipt', receiptFile, receiptFile.name || 'receipt.jpg');
+                if (isCash) {
+                    // The server insists on a receipt image, so cash orders send an auto-made "CASH" slip instead of asking the customer.
+                    const slip = await makeCashSlip(grandTotal);
+                    fd.append('receipt', slip, 'cash-order.png');
+                } else {
+                    fd.append('receipt', receiptFile, receiptFile.name || 'receipt.jpg');
+                }
 
                 const res = await fetch(`${CONFIG.supabaseUrl}/functions/v1/${CONFIG.functionName || 'smart-api'}`, { method: 'POST', headers: SB_HEADERS(), body: fd });
                 let data = {}; try { data = await res.json(); } catch (e) {}
