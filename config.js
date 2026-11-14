@@ -16,5 +16,8 @@ const CONFIG = {
     duitnowQrImage: 'duitnow-qr.png',   // save your QR image next to index.html
     bankName:    'Maybank',
     bankHolder:  'AINON JARIAH MOHD SHARIF',
-    bankNumber:  '162012827502'
+    bankNumber:  '162012827502',
+
+    // Home address shown to customers who choose Self-Pickup
+    pickupAddress: 'No.2,Persiaran Desa Puteri 3, Bandar Tasik Puteri, 48020 Rawang, Selangor'   // <-- replace with your real address
 };
