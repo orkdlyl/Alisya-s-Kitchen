@@ -62,7 +62,7 @@
                     4-Hour Slow-Simmered <span class="text-terracotta italic font-bold">Beef Lasagna</span>, Baked Fresh to Order.
                 </h1>
                 <p class="text-base sm:text-lg text-espressoMuted max-w-xl mx-auto leading-relaxed">
-                    Mini and Regular lasagna, plus Loaded Beef Fries.
+                    Mini and Regular lasagna, plus Loaded Beef Fries, on weekend drop days only.
                 </p>
                 <div class="flex flex-wrap items-center justify-center gap-3 text-xs sm:text-sm font-semibold text-basil">
                     <span class="bg-basilLight px-3 py-1.5 rounded-lg flex items-center gap-1.5"><i class="fa-solid fa-circle-check"></i> 100% Halal Ingredients</span>
@@ -95,13 +95,13 @@
             <div class="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
                 <div class="lg:col-span-7 space-y-4">
                     <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-garlic text-xs font-bold uppercase tracking-wider"><i class="fa-solid fa-calendar-days"></i><span>Why Only Certain Days?</span></div>
-                    <h2 class="font-display text-2xl sm:text-3xl font-bold leading-snug">We Only Open Pre Order Drops</h2>
+                    <h2 class="font-display text-2xl sm:text-3xl font-bold leading-snug">We Only Open Friday – Sunday Drops</h2>
                     <p class="text-sm sm:text-base text-cream/80 leading-relaxed">
-                        Because our beef ragu simmers for 4 full hours and every tray is assembled by hand. Select your preferred drop date below to lock in your slot before trays sell out.
+                        Because our beef ragu simmers for 4 full hours and every tray is assembled by hand, we only bake <strong>3 days a week</strong>. Select your preferred drop date below to lock in your slot before trays sell out.
                     </p>
                     <div class="bg-white/10 rounded-2xl p-4 border border-white/10 space-y-2.5">
                         <div class="flex items-center justify-between text-xs sm:text-sm font-bold">
-                            <span class="flex items-center gap-2 text-garlic"><i class="fa-solid fa-bowl-food"></i><span id="selected-drop-label">This Week's Batch Availability</span></span>
+                            <span class="flex items-center gap-2 text-garlic"><i class="fa-solid fa-bowl-food"></i><span id="selected-drop-label">This Weekend's Batch Availability</span></span>
                             <span id="slots-remaining-text" class="text-white bg-terracotta px-2.5 py-0.5 rounded-full text-xs">11 of 25 Trays Left</span>
                         </div>
                         <div class="w-full h-2.5 bg-white/15 rounded-full overflow-hidden">
@@ -116,7 +116,7 @@
                 <div class="lg:col-span-5 bg-white/5 border border-white/10 rounded-2xl p-5 space-y-3">
                     <p class="text-xs font-bold uppercase tracking-wider text-cream/70 flex items-center justify-between"><span>Upcoming Open Baking Days</span><span class="text-green-400">● Accepting Orders</span></p>
                     <div id="schedule-dates-list" class="space-y-2.5"></div>
-                    <p class="text-[11px] text-cream/60 text-center pt-1">* Prep &amp; sourcing. Tap a date to select it for your order.</p>
+                    <p class="text-[11px] text-cream/60 text-center pt-1">* Mon–Thu closed for ragu prep &amp; sourcing. Tap a date to select it for your order.</p>
                 </div>
             </div>
         </div>
@@ -139,7 +139,7 @@
             <div class="text-center max-w-2xl mx-auto space-y-2 mb-10">
                 <span class="text-xs font-bold uppercase tracking-widest text-terracotta">Step 2: Your Details</span>
                 <h2 class="font-display text-3xl sm:text-4xl font-extrabold text-espresso">Your Pre-Order Details</h2>
-                <p class="text-sm sm:text-base text-espressoMuted">Fill in your details, pay by DuitNow QR or cash and you're done. No chatting needed.</p>
+                <p class="text-sm sm:text-base text-espressoMuted">Fill in your details, pay by DuitNow QR or cash — and you're done. No chatting needed.</p>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -275,7 +275,7 @@
     <footer class="bg-espresso text-cream/80 py-10 px-4 sm:px-6 text-center text-xs sm:text-sm">
         <div class="max-w-4xl mx-auto space-y-3">
             <p class="font-display text-xl font-bold text-white">Alisya's Kitchen</p>
-            <p>Homemade Small-Batch Beef Lasagna • Pre Order Only</p>
+            <p>Homemade Small-Batch Beef Lasagna • Baked Fresh Fri – Sun Only</p>
             <p class="text-cream/50 text-xs pt-2">© 2026 Alisya's Kitchen.</p>
         </div>
     </footer>
@@ -422,7 +422,7 @@
         const LASAGNA_SIZES = [
             { id:'mini', name:'Mini Beef Lasagna', short:'Mini', serves:'1 Pax • Single-Serve Personal Pan', weight:'~350g', price:6, badge:'Personal Size', unit:'Tray' },
             { id:'regular', name:'Regular Beef Lasagna', short:'Regular', serves:'2–3 Pax • Classic Hearty Portion', weight:'~750g', price:15, badge:'Most Popular', unit:'Tray' },
-            { id:'fries', name:'Loaded Beef Fries', short:'Fries', serves:'1 Pax • Fries with beef topping', weight:'', price:8, badge:'Add-On', unit:'Portion', noStock:true }
+            { id:'fries', name:'Loaded Beef Fries', short:'Fries', serves:'1 Pax • Fries with beef topping', weight:'', price:8, badge:'Add-On', unit:'Portion' }
         ];
 
         // Delivery areas and fees (RM)
@@ -481,6 +481,12 @@
                 if (!res.ok) throw new Error('schedule ' + res.status);
                 const data = await res.json();
                 if (data.prices) LASAGNA_SIZES.forEach(it => { if (it.id !== 'fries' && data.prices[it.id] != null) it.price = Number(data.prices[it.id]); });
+                // Fries left per day (needs upgrade.sql; if missing, fries stay available)
+                const friesLeft = {};
+                try {
+                    const fr = await fetch(`${CONFIG.supabaseUrl}/rest/v1/rpc/get_fries`, { method: 'POST', headers: { ...SB_HEADERS(), 'Content-Type': 'application/json' }, body: '{}', cache: 'no-store' });
+                    if (fr.ok) (await fr.json()).forEach(r => { friesLeft[r.drop_id] = r.fries_left; });
+                } catch (e) {}
                 return (data.drops || []).slice(0, 3).map(d => {
                     const [y, m, day] = d.date.split('-').map(Number);
                     const drop = buildDrop(new Date(y, m - 1, day), {
@@ -488,7 +494,9 @@
                         regularMade: d.regular_made, regularTaken: d.regular_made - d.regular_left,
                         slots: d.slots
                     });
-                    drop.id = d.id; return drop;
+                    drop.id = d.id;
+                    drop.friesLeft = friesLeft[d.id] != null ? friesLeft[d.id] : 20;
+                    return drop;
                 });
             } catch (e) { return []; }
         }
@@ -504,8 +512,10 @@
 
         // Stock helpers for the selected day (fries are not stock-limited)
         function stockLeft(id) {
-            if (id === 'fries') return 20;
-            const d = openDropDates[selectedDropIndex]; return d ? d.stock[id].left : 20;
+            const d = openDropDates[selectedDropIndex];
+            if (!d) return 20;
+            if (id === 'fries') return d.friesLeft;
+            return d.stock[id].left;
         }
         function clampCart() { Object.keys(cart).forEach(id => { cart[id] = Math.min(cart[id] || 0, stockLeft(id)); }); }
         function applySlots(cur) {
@@ -561,9 +571,7 @@
             LASAGNA_SIZES.forEach(item => {
                 const qty = cart[item.id] || 0;
                 const left = stockLeft(item.id);
-                const stockBadge = item.noStock
-                    ? `<span class="text-xs font-bold px-3 py-1 rounded-full bg-basilLight text-basil">Available</span>`
-                    : `<span class="text-xs font-bold px-3 py-1 rounded-full ${left === 0 ? 'bg-red-600 text-white' : 'bg-basilLight text-basil'}">${left === 0 ? 'Sold out' : left + ' left'}</span>`;
+                const stockBadge = `<span class="text-xs font-bold px-3 py-1 rounded-full ${left === 0 ? 'bg-red-600 text-white' : 'bg-basilLight text-basil'}">${left === 0 ? 'Sold out' : left + ' left'}</span>`;
                 const card = document.createElement('div');
                 card.className = `bg-white rounded-3xl overflow-hidden border-2 transition-all flex flex-col justify-between shadow-warm ${qty > 0 ? 'border-terracotta ring-2 ring-terracotta/15' : 'border-espresso/10'}`;
                 card.innerHTML = `
@@ -668,8 +676,7 @@
             if (!drop) { showError('No baking day is open for ordering right now.'); return false; }
             if (drop.soldOut) { showError('That drop date is sold out. Please choose another date.'); return false; }
             for (const item of LASAGNA_SIZES) {
-                if (item.noStock) continue;
-                const left = drop.stock[item.id].left;
+                const left = stockLeft(item.id);
                 if ((cart[item.id] || 0) > left) { showError(`Only ${left} ${item.short} left for ${drop.dayName}. Please reduce your order or pick another date.`); return false; }
             }
             hideError(); return true;
