@@ -816,7 +816,6 @@
                     return;
                 }
                 const nm = esc($('customer-name').value.trim());
-                $('success-name').textContent = $('customer-name').value.trim();
                 $('success-message').innerHTML = isCash
                     ? `Thank you, <strong>${nm}</strong>. We've got your order. Please pay <strong>cash</strong> ${isDel ? 'to the rider on delivery' : 'when you collect'}.`
                     : `Thank you, <strong>${nm}</strong>. We've got your order and payment receipt. We'll verify the payment and prepare your order fresh for your drop day.`;
