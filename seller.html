@@ -67,6 +67,11 @@
                     <h2 class="font-display text-2xl font-bold">Orders</h2>
                     <p class="text-sm text-espressoMuted">Each order takes trays off the count automatically. Cancel an order to give its trays back.</p>
                 </div>
+                <select id="order-sort" onchange="renderOrders()" class="rounded-xl border border-espresso/20 bg-white px-3 py-2 text-xs font-bold">
+                    <option value="time">Delivery time (day, then time)</option>
+                    <option value="oldest">Order received: first to last</option>
+                    <option value="newest">Newest first</option>
+                </select>
                 <select id="order-filter" onchange="renderOrders()" class="rounded-xl border border-espresso/20 bg-white px-3 py-2 text-xs font-bold">
                     <option value="active">New + confirmed</option>
                     <option value="new">New only</option>
@@ -129,7 +134,7 @@
 
     <script>
         const $ = id => document.getElementById(id);
-        const PRESET_SLOTS = ['Lunch Batch (12:00 PM – 2:00 PM)', 'Tea-Time Batch (3:30 PM – 5:00 PM)', 'Dinner Batch (6:00 PM – 8:00 PM)'];
+        const PRESET_SLOTS = ['9:00 AM', '10:00 AM', '11:00 AM', '3:00 PM', '4:00 PM', '5:00 PM'];
         const SIZES = [['mini', 'Mini'], ['regular', 'Regular'], ['fries', 'Loaded Fries']];
         let sb = null, state = blankState(), removedIds = [], dirty = false, pollTimer = null;
 
@@ -164,7 +169,7 @@
             const rows = arr.map((s, k) => `
                 <div class="flex items-center gap-2">
                     <i class="fa-regular fa-clock text-terracotta text-sm w-4"></i>
-                    <input type="text" value="${esc(s)}" oninput="setSlot(${owner},${k},this.value)" placeholder="e.g., Lunch (12:00 PM – 2:00 PM)" class="flex-1 min-w-0 rounded-lg border border-espresso/20 bg-cream/60 px-3 py-2 text-sm font-semibold">
+                    <input type="text" value="${esc(s)}" oninput="setSlot(${owner},${k},this.value)" placeholder="e.g., 9:00 AM" class="flex-1 min-w-0 rounded-lg border border-espresso/20 bg-cream/60 px-3 py-2 text-sm font-semibold">
                     <button type="button" onclick="delSlot(${owner},${k})" aria-label="Remove time" class="w-8 h-8 rounded-lg text-espressoMuted hover:bg-red-50 hover:text-terracotta"><i class="fa-solid fa-xmark"></i></button>
                 </div>`).join('');
             const chips = PRESET_SLOTS.filter(p => !arr.includes(p)).map(p =>
@@ -372,9 +377,22 @@
             return m ? Number(m[1]) : Number(o.total);
         }
 
+        // Start time of a slot like "9:00 AM" in minutes (unreadable times go last)
+        function slotMinutes(slot) {
+            const m = /(\d{1,2})(?::(\d{2}))?\s*(AM|PM)/i.exec(slot || '');
+            if (!m) return 99999;
+            let h = Number(m[1]) % 12; if (m[3].toUpperCase() === 'PM') h += 12;
+            return h * 60 + Number(m[2] || 0);
+        }
+
         function renderOrders() {
             const f = $('order-filter').value;
-            const list = state.orders.filter(o => f === 'all' ? true : f === 'active' ? o.status !== 'cancelled' : o.status === f);
+            const sortBy = $('order-sort').value;
+            const t = o => new Date(o.created_at).getTime();
+            const list = state.orders.filter(o => f === 'all' ? true : f === 'active' ? o.status !== 'cancelled' : o.status === f)
+                .sort((a, b) => sortBy === 'newest' ? t(b) - t(a)
+                    : sortBy === 'oldest' ? t(a) - t(b)
+                    : (dateOf(a.drop_id).localeCompare(dateOf(b.drop_id)) || slotMinutes(a.slot) - slotMinutes(b.slot) || t(a) - t(b)));
             $('orders').innerHTML = list.length ? list.map(o => {
                 const [label, cls] = STATUS[o.status] || STATUS.new;
                 const cash = isCashOrder(o);
@@ -396,7 +414,7 @@
                     </div>
                     <div class="text-sm space-y-0.5">
                         <p><b>${esc(items)}</b> · ${esc(CONFIG.currency)} ${grandTotal(o).toFixed(2)}${cash ? ' <span class="text-espressoMuted">(collect cash)</span>' : ''}</p>
-                        <p class="text-espressoMuted">${esc(d !== '?' ? dayName(d) + ' ' + d : '')} · ${esc(o.slot)} · ${esc(o.method)}</p>
+                        <p class="text-espressoMuted">${esc(d !== '?' ? dayName(d) + ' ' + d : '')} · <b class="text-espresso">⏰ ${esc(o.slot)}</b> · ${esc(o.method)}</p>
                         ${o.address ? `<p class="text-espressoMuted">📍 ${o.delivery_area ? esc(o.delivery_area) + ' — ' : ''}${esc(o.address)}${o.method === 'Delivery' && o.delivery_fee != null ? ' (delivery ' + (Number(o.delivery_fee) ? esc(CONFIG.currency) + ' ' + Number(o.delivery_fee).toFixed(2) : 'free') + ')' : ''}</p>` : ''}
                         ${o.notes ? `<p class="text-espressoMuted">📝 ${esc(o.notes)}</p>` : ''}
                     </div>
