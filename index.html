@@ -70,7 +70,7 @@
                     4-Hour Slow-Simmered <span class="text-terracotta italic font-bold">Beef Lasagna</span>, Baked Fresh to Order.
                 </h1>
                 <p class="text-base sm:text-lg text-espressoMuted max-w-xl mx-auto leading-relaxed">
-                    Mini and Regular lasagna, plus Loaded Beef Fries.
+                    Mini and Regular lasagna, plus Loaded Beef Fries, on weekend drop days only.
                 </p>
                 <div class="flex flex-wrap items-center justify-center gap-3 text-xs sm:text-sm font-semibold text-basil">
                     <span class="bg-basilLight px-3 py-1.5 rounded-lg flex items-center gap-1.5"><i class="fa-solid fa-circle-check"></i> 100% Halal Ingredients</span>
@@ -103,9 +103,9 @@
             <div class="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
                 <div class="lg:col-span-7 space-y-4">
                     <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-garlic text-xs font-bold uppercase tracking-wider"><i class="fa-solid fa-calendar-days"></i><span>Why Only Certain Days?</span></div>
-                    <h2 class="font-display text-2xl sm:text-3xl font-bold leading-snug">We Only Pre Order Drops</h2>
+                    <h2 class="font-display text-2xl sm:text-3xl font-bold leading-snug">We Only Open Friday – Sunday Drops</h2>
                     <p class="text-sm sm:text-base text-cream/80 leading-relaxed">
-                        Because our beef simmers for 4 full hours and every tray is assembled by hand. Select your preferred drop date below to lock in your slot before trays sell out.
+                        Because our beef ragu simmers for 4 full hours and every tray is assembled by hand, we only bake <strong>3 days a week</strong>. Select your preferred drop date below to lock in your slot before trays sell out.
                     </p>
                     <div class="bg-white/10 rounded-2xl p-4 border border-white/10 space-y-2.5">
                         <div class="flex items-center justify-between text-xs sm:text-sm font-bold">
@@ -124,7 +124,7 @@
                 <div class="lg:col-span-5 bg-white/5 border border-white/10 rounded-2xl p-5 space-y-3">
                     <p class="text-xs font-bold uppercase tracking-wider text-cream/70 flex items-center justify-between"><span>Upcoming Open Baking Days</span><span id="accepting-indicator" class="text-green-400">● Accepting Orders</span></p>
                     <div id="schedule-dates-list" class="space-y-2.5"></div>
-                    <p class="text-[11px] text-cream/60 text-center pt-1"> &amp; sourcing. Tap a date to select it for your order.</p>
+                    <p class="text-[11px] text-cream/60 text-center pt-1">* pre orderonly for ingredient prep &amp; sourcing. Tap a date to select it for your order.</p>
                 </div>
             </div>
         </div>
@@ -284,7 +284,7 @@
                 </details>
                 <details class="group bg-white rounded-2xl border border-espresso/10 p-5 shadow-sm">
                     <summary class="flex items-center justify-between font-bold text-espresso cursor-pointer list-none"><span>How much is delivery?</span><i class="fa-solid fa-chevron-down text-xs text-terracotta group-open:rotate-180 transition-transform"></i></summary>
-                    <p class="text-sm text-espressoMuted mt-3 leading-relaxed">Desa Puteri is <strong>free</strong>. BTP is <strong>RM 2</strong>. Batu Arang, Kuang, Kota Puteri and Kundang are <strong>RM 4</strong>. The fee is added to your total at checkout.</p>
+                    <p class="text-sm text-espressoMuted mt-3 leading-relaxed">Desa Puteri is <strong>free</strong>. BTP is <strong>RM 2</strong>. GV is <strong>RM 3</strong>.Batu Arang, Kuang, Kota Puteri and Kundang are <strong>RM 4</strong>. The fee is added to your total at checkout.</p>
                 </details>
                 <details class="group bg-white rounded-2xl border border-espresso/10 p-5 shadow-sm">
                     <summary class="flex items-center justify-between font-bold text-espresso cursor-pointer list-none"><span>How do I store and reheat leftovers?</span><i class="fa-solid fa-chevron-down text-xs text-terracotta group-open:rotate-180 transition-transform"></i></summary>
@@ -442,14 +442,15 @@
     <script>
         // Menu items (no pictures / descriptions). Fries have no stock limit.
         const LASAGNA_SIZES = [
-            { id:'mini', name:'Mini Beef Lasagna', short:'Mini', serves:'1 Pax • Single-Serve Personal Pan', weight:'', price:6, badge:'Personal Size', unit:'Tray' },
-            { id:'regular', name:'Regular Beef Lasagna', short:'Regular', serves:'2–3 Pax • Classic Hearty Portion', weight:'', price:15, badge:'Most Popular', unit:'Tray' },
+            { id:'mini', name:'Mini Beef Lasagna', short:'Mini', serves:'1 Pax • Single-Serve Personal Pan', weight:'~350g', price:6, badge:'Personal Size', unit:'Tray' },
+            { id:'regular', name:'Regular Beef Lasagna', short:'Regular', serves:'2–3 Pax • Classic Hearty Portion', weight:'~750g', price:15, badge:'Most Popular', unit:'Tray' },
             { id:'fries', name:'Loaded Beef Fries', short:'Fries', serves:'1 Pax • Fries with beef topping', weight:'', price:8, badge:'Add-On', unit:'Portion' }
         ];
 
         // Delivery areas and fees (RM)
         const DELIVERY_AREAS = [
             { id:'btp', name:'BTP', fee:2 },
+            { id:'green-valley', name:'Green Valley', fee:3},
             { id:'batu-arang', name:'Batu Arang', fee:4 },
             { id:'kuang', name:'Kuang', fee:4 },
             { id:'kota-puteri', name:'Kota Puteri', fee:4 },
@@ -460,7 +461,7 @@
         // Home pickup address: set CONFIG.pickupAddress in config.js (or edit the fallback below)
         const PICKUP_ADDRESS = (typeof CONFIG !== 'undefined' && CONFIG.pickupAddress) ? CONFIG.pickupAddress : 'PASTE YOUR HOME ADDRESS HERE (set pickupAddress in config.js)';
 
-        let cart = { mini: 0, regular: 1, fries: 0 };
+        let cart = { mini: 0, regular: 0, fries: 0 };
         let openDropDates = [];
         let selectedDropIndex = 0;
         let collectionMethod = 'Self-Pickup';
@@ -479,7 +480,7 @@
 
         // ---------- Customer testimonials (auto-sliding photos) ----------
         // Put your feedback screenshots in a "testimonials" folder next to this page and list the file names here.
-        const TESTIMONIALS = ['testimonials1.jpeg', 'testimonials2.jpeg', 'testimonials3.jpeg', 'testimonials4.jpeg'];
+        const TESTIMONIALS = ['testimonials1.jpeg', 'testimonials2.jpeg', 'testimonials3.jpeg', 'testimonials4.jpeg','testimonials5.jpeg'];
 
         function renderTestimonials() {
             const track = $('t-track');
@@ -573,6 +574,10 @@
                 const msg = sbReady() ? 'No baking days are open right now. Please check back soon!' : 'Ordering is not set up yet (seller: add your Supabase details in config.js).';
                 sc.innerHTML = `<p class="text-sm text-cream/80 p-3.5 rounded-2xl border border-white/15">${msg}</p>`;
                 fp.innerHTML = `<p class="text-sm font-semibold text-terracotta col-span-full">${msg}</p>`;
+                // Don't leave the placeholder "11 of 25" showing when nothing loaded
+                $('selected-drop-label').textContent = 'No batch open right now';
+                $('slots-remaining-text').textContent = 'Not Available';
+                $('slots-progress-bar').style.width = '0%';
             }
             openDropDates.forEach((drop, idx) => {
                 const sel = idx === selectedDropIndex;
