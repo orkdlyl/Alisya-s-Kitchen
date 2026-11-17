@@ -70,7 +70,7 @@
                     4-Hour Slow-Simmered <span class="text-terracotta italic font-bold">Beef Lasagna</span>, Baked Fresh to Order.
                 </h1>
                 <p class="text-base sm:text-lg text-espressoMuted max-w-xl mx-auto leading-relaxed">
-                    Mini and Regular lasagna, plus Loaded Beef Fries, on weekend drop days only.
+                    Mini and Regular lasagna, plus Loaded Beef Fries.
                 </p>
                 <div class="flex flex-wrap items-center justify-center gap-3 text-xs sm:text-sm font-semibold text-basil">
                     <span class="bg-basilLight px-3 py-1.5 rounded-lg flex items-center gap-1.5"><i class="fa-solid fa-circle-check"></i> 100% Halal Ingredients</span>
@@ -103,9 +103,9 @@
             <div class="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
                 <div class="lg:col-span-7 space-y-4">
                     <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-garlic text-xs font-bold uppercase tracking-wider"><i class="fa-solid fa-calendar-days"></i><span>Why Only Certain Days?</span></div>
-                    <h2 class="font-display text-2xl sm:text-3xl font-bold leading-snug">We Only Open Friday – Sunday Drops</h2>
+                    <h2 class="font-display text-2xl sm:text-3xl font-bold leading-snug">We Only Pre Order Drops</h2>
                     <p class="text-sm sm:text-base text-cream/80 leading-relaxed">
-                        Because our beef ragu simmers for 4 full hours and every tray is assembled by hand, we only bake <strong>3 days a week</strong>. Select your preferred drop date below to lock in your slot before trays sell out.
+                        Because our beef simmers for 4 full hours and every tray is assembled by hand. Select your preferred drop date below to lock in your slot before trays sell out.
                     </p>
                     <div class="bg-white/10 rounded-2xl p-4 border border-white/10 space-y-2.5">
                         <div class="flex items-center justify-between text-xs sm:text-sm font-bold">
@@ -122,9 +122,9 @@
                     </div>
                 </div>
                 <div class="lg:col-span-5 bg-white/5 border border-white/10 rounded-2xl p-5 space-y-3">
-                    <p class="text-xs font-bold uppercase tracking-wider text-cream/70 flex items-center justify-between"><span>Upcoming Open Baking Days</span><span class="text-green-400">● Accepting Orders</span></p>
+                    <p class="text-xs font-bold uppercase tracking-wider text-cream/70 flex items-center justify-between"><span>Upcoming Open Baking Days</span><span id="accepting-indicator" class="text-green-400">● Accepting Orders</span></p>
                     <div id="schedule-dates-list" class="space-y-2.5"></div>
-                    <p class="text-[11px] text-cream/60 text-center pt-1">* Mon–Thu closed for ragu prep &amp; sourcing. Tap a date to select it for your order.</p>
+                    <p class="text-[11px] text-cream/60 text-center pt-1"> &amp; sourcing. Tap a date to select it for your order.</p>
                 </div>
             </div>
         </div>
@@ -591,10 +591,16 @@
                     <span class="pill-subtext text-[11px] font-semibold block mt-1 ${sel ? 'text-white/90' : 'text-basil'}">${drop.soldOut ? '● Sold out' : '● ' + drop.stock.mini.left + ' Mini · ' + drop.stock.regular.left + ' Regular left'}</span>`;
                 fp.appendChild(pill);
             });
+            // Accepting / not accepting indicator (red once every open date is sold out)
+            const ind = $('accepting-indicator');
+            const isOpen = openDropDates.some(d => !d.soldOut);
+            ind.textContent = isOpen ? '● Accepting Orders' : '● Not Accepting Orders';
+            ind.className = isOpen ? 'text-green-400' : 'text-red-400';
+
             const cur = openDropDates[selectedDropIndex];
             if (cur) {
                 $('selected-drop-label').textContent = `${cur.dayName} (${cur.dateStr}) Batch`;
-                $('slots-remaining-text').textContent = `${cur.remaining} of ${cur.totalCapacity} Trays Left`;
+                $('slots-remaining-text').textContent = cur.soldOut ? 'Sold Out' : `${cur.remaining} of ${cur.totalCapacity} Trays Left`;
                 $('slots-progress-bar').style.width = `${Math.round(cur.remaining / (cur.totalCapacity || 1) * 100)}%`;
                 $('summary-date-subtitle').textContent = `Drop Date: ${cur.fullLabel}`;
                 $('mobile-drop-short').textContent = cur.shortLabel;
