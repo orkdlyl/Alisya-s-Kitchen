@@ -23,6 +23,13 @@
         .font-display { font-family:'Fraunces',serif; }
         .drop-pill.active { background-color:#B83A2D; color:#fff; border-color:#B83A2D; box-shadow:0 8px 20px -4px rgba(184,58,45,0.35); }
         .drop-pill.active .pill-subtext { color:#FDE8E6; }
+
+        /* Testimonial auto-sliding strip */
+        .t-marquee { overflow:hidden; -webkit-mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent); mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent); }
+        .t-track { display:flex; width:max-content; animation:t-scroll var(--t-dur,40s) linear infinite; }
+        .t-marquee:hover .t-track, .t-marquee:active .t-track { animation-play-state:paused; }
+        @keyframes t-scroll { to { transform:translateX(-50%); } }
+        @media (prefers-reduced-motion:reduce) { .t-marquee { overflow-x:auto; } .t-track { animation:none; } }
     </style>
 </head>
 <body class="pb-24 md:pb-12 selection:bg-terracotta selection:text-white">
@@ -43,6 +50,7 @@
             <nav class="hidden md:flex items-center gap-8 text-sm font-semibold text-espressoMuted">
                 <a href="#schedule" class="hover:text-terracotta transition-colors">Drop Schedule</a>
                 <a href="#menu" class="hover:text-terracotta transition-colors">Menu</a>
+                <a href="#reviews" class="hover:text-terracotta transition-colors">Reviews</a>
                 <a href="#faq" class="hover:text-terracotta transition-colors">FAQ</a>
             </nav>
             <a href="#order-builder" class="bg-terracotta hover:bg-terracottaDark text-white text-sm font-bold px-4 py-2.5 rounded-xl shadow-sm transition-all flex items-center gap-2">
@@ -244,6 +252,17 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </section>
+
+    <!-- TESTIMONIALS (auto-sliding photos) -->
+    <section id="reviews" class="py-12 md:py-16">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 text-center space-y-2 mb-8">
+            <span class="text-xs font-bold uppercase tracking-widest text-terracotta">Happy Customers</span>
+            <h2 class="font-display text-3xl sm:text-4xl font-extrabold text-espresso">What Our Customers Say</h2>
+        </div>
+        <div class="t-marquee">
+            <div id="t-track" class="t-track"></div>
         </div>
     </section>
 
@@ -457,6 +476,20 @@
         const DEFAULT_SLOTS = ['9:00 AM', '10:00 AM', '11:00 AM', '3:00 PM', '4:00 PM', '5:00 PM'];
 
         const money = n => `${CONFIG.currency} ${Number(n).toFixed(2)}`;
+
+        // ---------- Customer testimonials (auto-sliding photos) ----------
+        // Put your feedback screenshots in a "testimonials" folder next to this page and list the file names here.
+        const TESTIMONIALS = ['testimonials/1.jpg', 'testimonials/2.jpg', 'testimonials/3.jpg', 'testimonials/4.jpg'];
+
+        function renderTestimonials() {
+            const track = $('t-track');
+            if (!track || !TESTIMONIALS.length) { const s = $('reviews'); if (s) s.classList.add('hidden'); return; }
+            let base = TESTIMONIALS.slice();
+            while (base.length < 8) base = base.concat(TESTIMONIALS);   // keeps the loop seamless with few photos
+            const card = src => `<div class="shrink-0 mr-4"><img src="${esc(src)}" alt="Customer feedback" class="h-64 sm:h-80 w-auto rounded-2xl border border-espresso/10 shadow-warm bg-white" onerror="this.parentNode.remove()"></div>`;
+            track.innerHTML = base.concat(base).map(card).join('');   // two copies = endless loop
+            track.style.setProperty('--t-dur', (base.length * 5) + 's'); // ~5s per photo; lower number = faster
+        }
 
         // One baking day: per-size stock + the time slots the seller opened for that day
         function buildDrop(dt, o) {
@@ -876,6 +909,7 @@
         }
 
         window.addEventListener('DOMContentLoaded', async () => {
+            renderTestimonials();
             populateDeliveryAreas();
             $('pickup-address-text').textContent = PICKUP_ADDRESS;
             setCollectionMethod('Self-Pickup');
