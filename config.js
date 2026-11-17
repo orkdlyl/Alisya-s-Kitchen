@@ -13,7 +13,7 @@ const CONFIG = {
     supabaseAnonKey: 'sb_publishable_bBid7fbSsnRPFrc3GVk8sA_FwL_Y3-D',    // the "anon" / "publishable" key (NOT service_role)
 
     // Payment details shown to customers
-    duitnowQrImage: 'duitnow-qr.png','tng-qr.jpeg',   // save your QR image next to index.html
+    duitnowQrImage: 'duitnow-qr.png',   // save your QR image next to index.html
     bankName:    'Maybank',
     bankHolder:  'AINON JARIAH MOHD SHARIF',
     bankNumber:  '162012827502',
