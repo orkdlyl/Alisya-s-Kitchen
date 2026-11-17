@@ -9,6 +9,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700;9..144,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+    <!-- Backup sources in case the first one is blocked or slow on your network -->
+    <script>window.supabase || document.write('<script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"><\/script>')</script>
+    <script>window.supabase || document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/supabase-js/2.45.4/umd/supabase.min.js"><\/script>')</script>
     <script>
         tailwind.config = { theme: { extend: {
             fontFamily: { serif: ['Fraunces','Georgia','serif'], sans: ['Plus Jakarta Sans','system-ui','sans-serif'] },
@@ -480,6 +483,8 @@
         async function logout() { if (dirty && !confirm('You have unsaved changes. Log out anyway?')) return; dirty = false; await sb.auth.signOut(); }
 
         async function init() {
+            if (typeof CONFIG === 'undefined') { showLogin('config.js did not load. Make sure it is in the same folder as seller.html.'); $('login-btn').disabled = true; return; }
+            if (typeof supabase === 'undefined' || !supabase.createClient) { showLogin('Could not load the Supabase library (your network may be blocking the CDN). Try another network / turn off ad-block, then refresh.'); $('login-btn').disabled = true; return; }
             $('brand-line').textContent = CONFIG.brandName; $('login-brand').textContent = CONFIG.brandName;
             if (!CONFIG.supabaseUrl || CONFIG.supabaseUrl.startsWith('PASTE') || !CONFIG.supabaseAnonKey || CONFIG.supabaseAnonKey.startsWith('PASTE')) {
                 showLogin('Add your Supabase URL and key to config.js first.'); $('login-btn').disabled = true; return;
@@ -496,7 +501,7 @@
                 if (event === 'SIGNED_OUT') showLogin();
             });
         }
-        init();
+        init().catch(e => { console.error(e); showLogin('Startup error: ' + (e.message || e)); });
     </script>
 </body>
 </html>
