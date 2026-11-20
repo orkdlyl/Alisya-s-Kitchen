@@ -455,8 +455,8 @@
             { id:'Pasta', name:'Spaghetti Bolognese', short:'Spaghetti', serves:'1 Pax • Spaghetti Bolognese', weight:'', price:10, badge:'New', unit:'Portion' },
         ];
 
-        // Items whose stock is not tracked per drop (no "left" badge shown)
-        const UNTRACKED = ['Pasta'];
+        // Items whose stock is not tracked per drop (shows "Available" instead of a count)
+        const UNTRACKED = [];
 
         // Delivery areas and fees (RM)
         const DELIVERY_AREAS = [
@@ -535,6 +535,12 @@
                     const fr = await fetch(`${CONFIG.supabaseUrl}/rest/v1/rpc/get_fries`, { method: 'POST', headers: { ...SB_HEADERS(), 'Content-Type': 'application/json' }, body: '{}', cache: 'no-store' });
                     if (fr.ok) (await fr.json()).forEach(r => { friesLeft[r.drop_id] = r.fries_left; });
                 } catch (e) {}
+                // Spaghetti left per day (needs pasta-upgrade.sql; if missing, falls back to 20)
+                const pastaLeft = {};
+                try {
+                    const pr = await fetch(`${CONFIG.supabaseUrl}/rest/v1/rpc/get_pasta`, { method: 'POST', headers: { ...SB_HEADERS(), 'Content-Type': 'application/json' }, body: '{}', cache: 'no-store' });
+                    if (pr.ok) (await pr.json()).forEach(r => { pastaLeft[r.drop_id] = r.pasta_left; });
+                } catch (e) {}
                 return (data.drops || []).slice(0, 3).map(d => {
                     const [y, m, day] = d.date.split('-').map(Number);
                     const drop = buildDrop(new Date(y, m - 1, day), {
@@ -544,6 +550,7 @@
                     });
                     drop.id = d.id;
                     drop.friesLeft = friesLeft[d.id] != null ? friesLeft[d.id] : 20;
+                    drop.pastaLeft = pastaLeft[d.id] != null ? pastaLeft[d.id] : 20;
                     return drop;
                 });
             } catch (e) { return []; }
@@ -563,7 +570,7 @@
             const d = openDropDates[selectedDropIndex];
             if (!d) return 20;
             if (id === 'fries') return d.friesLeft;
-            if (id === 'Pasta') return 20;
+            if (id === 'Pasta') return d.pastaLeft;
             return d.stock[id].left;
         }
         function clampCart() { Object.keys(cart).forEach(id => { cart[id] = Math.min(cart[id] || 0, stockLeft(id)); }); }
