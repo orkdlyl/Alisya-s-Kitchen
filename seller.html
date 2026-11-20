@@ -138,7 +138,7 @@
     <script>
         const $ = id => document.getElementById(id);
         const PRESET_SLOTS = ['9:00 AM', '10:00 AM', '11:00 AM', '3:00 PM', '4:00 PM', '5:00 PM'];
-        const SIZES = [['mini', 'Mini'], ['regular', 'Regular'], ['fries', 'Loaded Fries']];
+        const SIZES = [['mini', 'Mini'], ['regular', 'Regular'], ['fries', 'Loaded Fries'], ['pasta', 'Pasta Bolognese']];        
         let sb = null, state = blankState(), removedIds = [], dirty = false, pollTimer = null;
 
         function blankState() { return { defaults: { miniMade: 15, regularMade: 10, friesMade: 20, slots: [...PRESET_SLOTS] }, drops: [], orders: [] }; }
