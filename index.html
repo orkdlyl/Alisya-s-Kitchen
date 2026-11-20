@@ -70,7 +70,7 @@
                     4-Hour Slow-Simmered <span class="text-terracotta italic font-bold">Beef Lasagna</span>, Baked Fresh to Order.
                 </h1>
                 <p class="text-base sm:text-lg text-espressoMuted max-w-xl mx-auto leading-relaxed">
-                    Mini and Regular lasagna, plus Loaded Beef Fries, on pre order drop days only.
+                    Mini and Regular lasagna, Loaded Beef Fries and Spaghetti Bolognese, on pre order drop days only.
                 </p>
                 <div class="flex flex-wrap items-center justify-center gap-3 text-xs sm:text-sm font-semibold text-basil">
                     <span class="bg-basilLight px-3 py-1.5 rounded-lg flex items-center gap-1.5"><i class="fa-solid fa-circle-check"></i> 100% Halal Ingredients</span>
@@ -105,7 +105,7 @@
                     <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-garlic text-xs font-bold uppercase tracking-wider"><i class="fa-solid fa-calendar-days"></i><span>Why Only Certain Days?</span></div>
                     <h2 class="font-display text-2xl sm:text-3xl font-bold leading-snug">We Only Open Pre Order Drops</h2>
                     <p class="text-sm sm:text-base text-cream/80 leading-relaxed">
-                        Because our beef  simmers for 4 full hours and every tray is assembled by hand. Select your preferred drop date below to lock in your slot before trays sell out.
+                        Because our beef simmers for 4 full hours and every tray is assembled by hand. Select your preferred drop date below to lock in your slot before trays sell out.
                     </p>
                     <div class="bg-white/10 rounded-2xl p-4 border border-white/10 space-y-2.5">
                         <div class="flex items-center justify-between text-xs sm:text-sm font-bold">
@@ -124,7 +124,7 @@
                 <div class="lg:col-span-5 bg-white/5 border border-white/10 rounded-2xl p-5 space-y-3">
                     <p class="text-xs font-bold uppercase tracking-wider text-cream/70 flex items-center justify-between"><span>Upcoming Open Baking Days</span><span id="accepting-indicator" class="text-green-400">● Accepting Orders</span></p>
                     <div id="schedule-dates-list" class="space-y-2.5"></div>
-                    <p class="text-[11px] text-cream/60 text-center pt-1">* pre orderonly for ingredient prep &amp; sourcing. Tap a date to select it for your order.</p>
+                    <p class="text-[11px] text-cream/60 text-center pt-1">* Pre-order only for ingredient prep &amp; sourcing. Tap a date to select it for your order.</p>
                 </div>
             </div>
         </div>
@@ -135,9 +135,9 @@
         <div class="max-w-5xl mx-auto space-y-10">
             <div class="text-center max-w-2xl mx-auto space-y-3">
                 <span class="text-xs font-bold uppercase tracking-widest text-terracotta">Step 1: Choose Your Items</span>
-                <h2 class="font-display text-3xl sm:text-4xl font-extrabold text-espresso">Lasagna &amp; Loaded Beef Fries</h2>
+                <h2 class="font-display text-3xl sm:text-4xl font-extrabold text-espresso">Lasagna, Fries &amp; Spaghetti</h2>
             </div>
-                <div id="lasagna-sizes-grid" class="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6"></div>        
+            <div id="lasagna-sizes-grid" class="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6"></div>
         </div>
     </section>
 
@@ -280,7 +280,7 @@
                 </details>
                 <details class="group bg-white rounded-2xl border border-espresso/10 p-5 shadow-sm">
                     <summary class="flex items-center justify-between font-bold text-espresso cursor-pointer list-none"><span>How much is delivery?</span><i class="fa-solid fa-chevron-down text-xs text-terracotta group-open:rotate-180 transition-transform"></i></summary>
-                    <p class="text-sm text-espressoMuted mt-3 leading-relaxed">Desa Puteri is <strong>free</strong>. BTP is <strong>RM 2</strong>. GV is <strong>RM 3</strong>.Batu Arang, Kuang, Kota Puteri and Kundang are <strong>RM 4</strong>. The fee is added to your total at checkout.</p>
+                    <p class="text-sm text-espressoMuted mt-3 leading-relaxed">Desa Puteri is <strong>free</strong>. BTP is <strong>RM 2</strong>. GV is <strong>RM 3</strong>. Batu Arang, Kuang, Kota Puteri and Kundang are <strong>RM 4</strong>. The fee is added to your total at checkout.</p>
                 </details>
                 <details class="group bg-white rounded-2xl border border-espresso/10 p-5 shadow-sm">
                     <summary class="flex items-center justify-between font-bold text-espresso cursor-pointer list-none"><span>How do I store and reheat leftovers?</span><i class="fa-solid fa-chevron-down text-xs text-terracotta group-open:rotate-180 transition-transform"></i></summary>
@@ -447,13 +447,16 @@
     <!-- Seller settings (Telegram, bank details, pickupAddress) live in config.js -->
     <script src="config.js"></script>
     <script>
-        // Menu items (no pictures / descriptions). Fries have no stock limit.
+        // Menu items (no pictures / descriptions). Fries and Spaghetti have no stock limit tracked here.
         const LASAGNA_SIZES = [
             { id:'mini', name:'Mini Beef Lasagna', short:'Mini', serves:'1 Pax • Single-Serve Personal Pan', weight:'', price:6, badge:'Personal Size', unit:'Tray' },
             { id:'regular', name:'Regular Beef Lasagna', short:'Regular', serves:'2–3 Pax • Classic Hearty Portion', weight:'', price:15, badge:'Most Popular', unit:'Tray' },
             { id:'fries', name:'Loaded Beef Fries', short:'Fries', serves:'1 Pax • Fries with beef topping', weight:'', price:8, badge:'Add-On', unit:'Portion' },
             { id:'Pasta', name:'Spaghetti Bolognese', short:'Spaghetti', serves:'1 Pax • Spaghetti Bolognese', weight:'', price:10, badge:'New', unit:'Portion' },
         ];
+
+        // Items whose stock is not tracked per drop (no "left" badge shown)
+        const UNTRACKED = ['Pasta'];
 
         // Delivery areas and fees (RM)
         const DELIVERY_AREAS = [
@@ -482,12 +485,12 @@
         const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
         const DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
         const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-        const DEFAULT_SLOTS = [ '10:00 AM','5:00 PM'];
+        const DEFAULT_SLOTS = ['10:00 AM','3:00 PM'];
 
         const money = n => `${CONFIG.currency} ${Number(n).toFixed(2)}`;
 
         // ---------- Customer testimonials (auto-sliding photos) ----------
-        // Put your feedback screenshots in a "testimonials" folder next to this page and list the file names here.
+        // Put your feedback screenshots next to this page and list the file names here.
         const TESTIMONIALS = ['testimonials1.jpeg', 'testimonials2.jpeg', 'testimonials3.jpeg', 'testimonials4.jpeg','testimonials5.jpeg'];
 
         function renderTestimonials() {
@@ -525,7 +528,7 @@
                 const res = await fetch(`${CONFIG.supabaseUrl}/rest/v1/rpc/get_schedule`, { method: 'POST', headers: { ...SB_HEADERS(), 'Content-Type': 'application/json' }, body: '{}', cache: 'no-store' });
                 if (!res.ok) throw new Error('schedule ' + res.status);
                 const data = await res.json();
-                if (data.prices) LASAGNA_SIZES.forEach(it => { if (it.id !== 'fries' && data.prices[it.id] != null) it.price = Number(data.prices[it.id]); });
+                if (data.prices) LASAGNA_SIZES.forEach(it => { if (it.id !== 'fries' && it.id !== 'Pasta' && data.prices[it.id] != null) it.price = Number(data.prices[it.id]); });
                 // Fries left per day (needs upgrade.sql; if missing, fries stay available)
                 const friesLeft = {};
                 try {
@@ -555,7 +558,7 @@
             renderDropSchedule(); updateOrderSummary();
         }
 
-        // Stock helpers for the selected day (fries are not stock-limited)
+        // Stock helpers for the selected day (fries and spaghetti are not stock-limited per drop)
         function stockLeft(id) {
             const d = openDropDates[selectedDropIndex];
             if (!d) return 20;
@@ -627,7 +630,10 @@
             LASAGNA_SIZES.forEach(item => {
                 const qty = cart[item.id] || 0;
                 const left = stockLeft(item.id);
-                const stockBadge = `<span class="text-xs font-bold px-3 py-1 rounded-full ${left === 0 ? 'bg-red-600 text-white' : 'bg-basilLight text-basil'}">${left === 0 ? 'Sold out' : left + ' left'}</span>`;
+                const tracked = !UNTRACKED.includes(item.id);
+                const stockBadge = tracked
+                    ? `<span class="text-xs font-bold px-3 py-1 rounded-full ${left === 0 ? 'bg-red-600 text-white' : 'bg-basilLight text-basil'}">${left === 0 ? 'Sold out' : left + ' left'}</span>`
+                    : `<span class="text-xs font-bold px-3 py-1 rounded-full bg-basilLight text-basil">Available</span>`;
                 const card = document.createElement('div');
                 card.className = `bg-white rounded-3xl overflow-hidden border-2 transition-all flex flex-col justify-between shadow-warm ${qty > 0 ? 'border-terracotta ring-2 ring-terracotta/15' : 'border-espresso/10'}`;
                 card.innerHTML = `
@@ -862,7 +868,7 @@
                 // Extra order details are added to the notes so the seller always sees them
                 const extra = [];
                 if (cart.fries) extra.push(`Loaded Beef Fries x${cart.fries}`);
-                if (cart.bolognese) extra.push(`Lasagna Bolognese x${cart.bolognese}`);
+                if (cart.Pasta) extra.push(`Spaghetti Bolognese x${cart.Pasta}`);   // FIX: was cart.bolognese (never existed)
                 extra.push(`Payment: ${isCash ? 'CASH' : (qrChoice === 'tng' ? 'Touch n Go (TnG)' : 'DuitNow/Transfer')}`);
                 if (isDel && area) extra.push(`Delivery area: ${area.name} (fee ${deliveryFee ? CONFIG.currency + ' ' + deliveryFee : 'Free'})`);
                 extra.push(`Total: ${money(grandTotal)}`);
@@ -879,7 +885,7 @@
                 fd.append('mini', cart.mini || 0);
                 fd.append('regular', cart.regular || 0);
                 fd.append('fries', cart.fries || 0);
-                fd.append('Pasta', cart.pasta || 0);
+                fd.append('Pasta', cart.Pasta || 0);   // FIX: was cart.pasta (undefined), so spaghetti always sent 0
                 fd.append('payment_method', isCash ? 'cash' : 'online');
                 fd.append('delivery_area', area ? area.name : '');
                 fd.append('delivery_fee', deliveryFee);
