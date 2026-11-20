@@ -137,7 +137,7 @@
                 <span class="text-xs font-bold uppercase tracking-widest text-terracotta">Step 1: Choose Your Items</span>
                 <h2 class="font-display text-3xl sm:text-4xl font-extrabold text-espresso">Lasagna &amp; Loaded Beef Fries</h2>
             </div>
-            <div id="lasagna-sizes-grid" class="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6"></div>
+                <div id="lasagna-sizes-grid" class="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6"></div>        
         </div>
     </section>
 
@@ -455,7 +455,8 @@
         const LASAGNA_SIZES = [
             { id:'mini', name:'Mini Beef Lasagna', short:'Mini', serves:'1 Pax • Single-Serve Personal Pan', weight:'', price:6, badge:'Personal Size', unit:'Tray' },
             { id:'regular', name:'Regular Beef Lasagna', short:'Regular', serves:'2–3 Pax • Classic Hearty Portion', weight:'', price:15, badge:'Most Popular', unit:'Tray' },
-            { id:'fries', name:'Loaded Beef Fries', short:'Fries', serves:'1 Pax • Fries with beef topping', weight:'', price:8, badge:'Add-On', unit:'Portion' }
+            { id:'fries', name:'Loaded Beef Fries', short:'Fries', serves:'1 Pax • Fries with beef topping', weight:'', price:8, badge:'Add-On', unit:'Portion' },
+            { id:'Pasta', name:'Spaghetti Bolognese', short:'Spaghetti', serves:'1 Pax • Spaghetti Bolognese', weight:'', price:10, badge:'New', unit:'Portion' },
         ];
 
         // Delivery areas and fees (RM)
@@ -472,7 +473,7 @@
         // Home pickup address: set CONFIG.pickupAddress in config.js (or edit the fallback below)
         const PICKUP_ADDRESS = (typeof CONFIG !== 'undefined' && CONFIG.pickupAddress) ? CONFIG.pickupAddress : 'PASTE YOUR HOME ADDRESS HERE (set pickupAddress in config.js)';
 
-        let cart = { mini: 0, regular: 0, fries: 0 };
+        let cart = { mini: 0, regular: 0, fries: 0, Pasta: 0 };
         let openDropDates = [];
         let selectedDropIndex = 0;
         let collectionMethod = 'Self-Pickup';
@@ -485,7 +486,7 @@
         const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
         const DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
         const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-        const DEFAULT_SLOTS = ['9:00 AM', '10:00 AM', '11:00 AM', '3:00 PM', '4:00 PM', '5:00 PM'];
+        const DEFAULT_SLOTS = [ '10:00 AM','5:00 PM'];
 
         const money = n => `${CONFIG.currency} ${Number(n).toFixed(2)}`;
 
@@ -563,6 +564,7 @@
             const d = openDropDates[selectedDropIndex];
             if (!d) return 20;
             if (id === 'fries') return d.friesLeft;
+            if (id === 'Pasta') return 20;
             return d.stock[id].left;
         }
         function clampCart() { Object.keys(cart).forEach(id => { cart[id] = Math.min(cart[id] || 0, stockLeft(id)); }); }
@@ -864,6 +866,7 @@
                 // Extra order details are added to the notes so the seller always sees them
                 const extra = [];
                 if (cart.fries) extra.push(`Loaded Beef Fries x${cart.fries}`);
+                if (cart.bolognese) extra.push(`Lasagna Bolognese x${cart.bolognese}`);
                 extra.push(`Payment: ${isCash ? 'CASH' : (qrChoice === 'tng' ? 'Touch n Go (TnG)' : 'DuitNow/Transfer')}`);
                 if (isDel && area) extra.push(`Delivery area: ${area.name} (fee ${deliveryFee ? CONFIG.currency + ' ' + deliveryFee : 'Free'})`);
                 extra.push(`Total: ${money(grandTotal)}`);
@@ -926,7 +929,7 @@
             $('receipt-preview').classList.add('hidden');
             ['customer-name', 'customer-phone', 'special-notes', 'delivery-address'].forEach(id => $(id).value = '');
             $('delivery-area').value = '';
-            cart = { mini: 0, regular: 1, fries: 0 };
+            cart = { mini: 0, regular: 0, fries: 0, Pasta: 0 };
             renderMenu(); updateOrderSummary();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
