@@ -100,7 +100,7 @@
             <div class="flex items-end justify-between gap-3 flex-wrap">
                 <div>
                     <h2 class="font-display text-2xl font-bold">Baking days</h2>
-                    <p class="text-sm text-espressoMuted">Per day: how many Mini and Regular you will make, and the pick-up / delivery times customers can choose.</p>
+                    <p class="text-sm text-espressoMuted">Per day: how many of each item you will make, and the pick-up / delivery times customers can choose.</p>
                 </div>
                 <div class="flex gap-2">
                     <button type="button" onclick="addWeekend()" class="px-3.5 py-2.5 rounded-xl bg-white border border-espresso/15 hover:bg-parchment text-xs font-bold flex items-center gap-2"><i class="fa-solid fa-calendar-plus text-terracotta"></i> Add next Fri–Sun</button>
@@ -138,10 +138,10 @@
     <script>
         const $ = id => document.getElementById(id);
         const PRESET_SLOTS = ['9:00 AM', '10:00 AM', '11:00 AM', '3:00 PM', '4:00 PM', '5:00 PM'];
-        const SIZES = [['mini', 'Mini'], ['regular', 'Regular'], ['fries', 'Loaded Fries'], ['pasta', 'Pasta Bolognese']];        
+        const SIZES = [['mini', 'Mini'], ['regular', 'Regular'], ['fries', 'Loaded Fries'], ['pasta', 'Pasta Bolognese']];
         let sb = null, state = blankState(), removedIds = [], dirty = false, pollTimer = null;
 
-        function blankState() { return { defaults: { miniMade: 15, regularMade: 10, friesMade: 20, slots: [...PRESET_SLOTS] }, drops: [], orders: [] }; }
+        function blankState() { return { defaults: { miniMade: 15, regularMade: 10, friesMade: 20, pastaMade: 20, slots: [...PRESET_SLOTS] }, drops: [], orders: [] }; }
 
         const pad = n => String(n).padStart(2, '0');
         const iso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -199,6 +199,8 @@
                         <input type="number" min="0" max="999" value="${d.regularMade}" onchange="setDefault('regularMade',this.value)" class="num rounded-lg border border-espresso/20 bg-cream/60 py-2 text-sm font-bold text-espresso"></label>
                     <label class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-espressoMuted">Fries to make
                         <input type="number" min="0" max="999" value="${d.friesMade}" onchange="setDefault('friesMade',this.value)" class="num rounded-lg border border-espresso/20 bg-cream/60 py-2 text-sm font-bold text-espresso"></label>
+                    <label class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-espressoMuted">Pasta to make
+                        <input type="number" min="0" max="999" value="${d.pastaMade}" onchange="setDefault('pastaMade',this.value)" class="num rounded-lg border border-espresso/20 bg-cream/60 py-2 text-sm font-bold text-espresso"></label>
                 </div>
                 ${slotsHtml(-1)}`;
         }
@@ -241,7 +243,7 @@
                         <button type="button" onclick="removeDrop(${i})" aria-label="Delete day" class="w-8 h-8 rounded-lg text-espressoMuted hover:bg-red-50 hover:text-terracotta"><i class="fa-regular fa-trash-can"></i></button>
                     </div>
                 </div>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">${sizeBlocks}</div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">${sizeBlocks}</div>
                 ${slotsHtml(i)}
             </div>`;
         }
@@ -282,7 +284,7 @@
         }
         function removeDrop(i) {
             const d = state.drops[i];
-            if (d.regular.online > 0 || d.mini.online > 0 || d.fries.online > 0) { toast('This day has orders. Untick “Open for orders” instead of deleting.'); return; }
+            if (d.regular.online > 0 || d.mini.online > 0 || d.fries.online > 0 || d.pasta.online > 0) { toast('This day has orders. Untick “Open for orders” instead of deleting.'); return; }
             if (!confirm('Delete this baking day?')) return;
             if (d.saved) removedIds.push(d.id);
             state.drops.splice(i, 1); markDirty(); render();
@@ -290,7 +292,8 @@
         function newDrop(date) {
             const df = state.defaults;
             return { id: uid(), saved: false, date, open: true, slots: [...df.slots],
-                mini: { made: df.miniMade, online: 0, offline: 0 }, regular: { made: df.regularMade, online: 0, offline: 0 }, fries: { made: df.friesMade, online: 0, offline: 0 } };
+                mini: { made: df.miniMade, online: 0, offline: 0 }, regular: { made: df.regularMade, online: 0, offline: 0 },
+                fries: { made: df.friesMade, online: 0, offline: 0 }, pasta: { made: df.pastaMade, online: 0, offline: 0 } };
         }
         function addDrop() {
             const last = state.drops.length ? parseIso(state.drops[state.drops.length - 1].date) : new Date();
@@ -314,26 +317,38 @@
 
         function applyOnline(rows) {
             const by = {};
-            rows.forEach(o => { const b = by[o.drop_id] = by[o.drop_id] || { mini: 0, regular: 0, fries: 0 }; b.mini += o.mini; b.regular += o.regular; b.fries += (o.fries || 0); });
-            state.drops.forEach(d => { const b = by[d.id] || { mini: 0, regular: 0, fries: 0 }; d.mini.online = b.mini; d.regular.online = b.regular; d.fries.online = b.fries; });
+            rows.forEach(o => {
+                const b = by[o.drop_id] = by[o.drop_id] || { mini: 0, regular: 0, fries: 0, pasta: 0 };
+                b.mini += o.mini; b.regular += o.regular; b.fries += (o.fries || 0); b.pasta += (o.pasta || 0);
+            });
+            state.drops.forEach(d => {
+                const b = by[d.id] || { mini: 0, regular: 0, fries: 0, pasta: 0 };
+                d.mini.online = b.mini; d.regular.online = b.regular; d.fries.online = b.fries; d.pasta.online = b.pasta;
+            });
         }
 
         async function loadAll() {
             const [s, d, active, ords] = await Promise.all([
                 sb.from('settings').select('*').eq('id', 1).single(),
                 sb.from('drops').select('*').order('date'),
-                sb.from('orders').select('drop_id,mini,regular,fries').neq('status', 'cancelled'),
+                sb.from('orders').select('drop_id,mini,regular,fries,pasta').neq('status', 'cancelled'),
                 sb.from('orders').select('*').order('created_at', { ascending: false }).limit(300)
             ]);
             const err = s.error || d.error || active.error || ords.error;
             if (err) { toast('Could not load: ' + err.message); return; }
             state = blankState();
-            state.defaults = { miniMade: s.data.mini_made, regularMade: s.data.regular_made, friesMade: s.data.fries_made != null ? s.data.fries_made : 20, slots: Array.isArray(s.data.slots) ? s.data.slots : [] };
+            state.defaults = {
+                miniMade: s.data.mini_made, regularMade: s.data.regular_made,
+                friesMade: s.data.fries_made != null ? s.data.fries_made : 20,
+                pastaMade: s.data.pasta_made != null ? s.data.pasta_made : 20,
+                slots: Array.isArray(s.data.slots) ? s.data.slots : []
+            };
             state.drops = d.data.map(r => ({
                 id: r.id, saved: true, date: r.date, open: r.open, slots: Array.isArray(r.slots) ? r.slots : [],
                 mini: { made: r.mini_made, online: 0, offline: r.mini_offline },
                 regular: { made: r.regular_made, online: 0, offline: r.regular_offline },
-                fries: { made: r.fries_made != null ? r.fries_made : 0, online: 0, offline: r.fries_offline || 0 }
+                fries: { made: r.fries_made != null ? r.fries_made : 0, online: 0, offline: r.fries_offline || 0 },
+                pasta: { made: r.pasta_made || 0, online: 0, offline: r.pasta_offline || 0 }
             }));
             applyOnline(active.data);
             state.orders = ords.data;
@@ -347,7 +362,9 @@
                 const dates = state.drops.map(d => d.date);
                 if (new Set(dates).size !== dates.length) { toast('Two baking days have the same date. Please fix it first.'); return; }
                 let r = await sb.from('settings').update({
-                    mini_made: state.defaults.miniMade, regular_made: state.defaults.regularMade, fries_made: state.defaults.friesMade, slots: cleanSlots(state.defaults.slots)
+                    mini_made: state.defaults.miniMade, regular_made: state.defaults.regularMade,
+                    fries_made: state.defaults.friesMade, pasta_made: state.defaults.pastaMade,
+                    slots: cleanSlots(state.defaults.slots)
                 }).eq('id', 1);
                 if (r.error) throw r.error;
                 if (removedIds.length) { r = await sb.from('drops').delete().in('id', removedIds); if (r.error) throw r.error; }
@@ -356,6 +373,7 @@
                         id: d.id, date: d.date, open: d.open, slots: cleanSlots(d.slots),
                         mini_made: d.mini.made, regular_made: d.regular.made,
                         fries_made: d.fries.made, fries_offline: d.fries.offline,
+                        pasta_made: d.pasta.made, pasta_offline: d.pasta.offline,
                         mini_offline: d.mini.offline, regular_offline: d.regular.offline
                     })), { onConflict: 'id' });
                     if (r.error) throw r.error;
@@ -399,7 +417,7 @@
             $('orders').innerHTML = list.length ? list.map(o => {
                 const [label, cls] = STATUS[o.status] || STATUS.new;
                 const cash = isCashOrder(o);
-                const items = [o.mini ? `${o.mini}× Mini` : '', o.regular ? `${o.regular}× Regular` : '', o.fries ? `${o.fries}× Loaded Fries` : ''].filter(Boolean).join(' + ');
+                const items = [o.mini ? `${o.mini}× Mini` : '', o.regular ? `${o.regular}× Regular` : '', o.fries ? `${o.fries}× Loaded Fries` : '', o.pasta ? `${o.pasta}× Pasta Bolognese` : ''].filter(Boolean).join(' + ');
                 const when = new Date(o.created_at).toLocaleString('en-MY', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
                 const d = dateOf(o.drop_id);
                 const payBadge = cash
@@ -446,7 +464,7 @@
         // Refresh orders + online counts without touching unsaved edits
         async function refreshOrders() {
             const [active, ords] = await Promise.all([
-                sb.from('orders').select('drop_id,mini,regular,fries').neq('status', 'cancelled'),
+                sb.from('orders').select('drop_id,mini,regular,fries,pasta').neq('status', 'cancelled'),
                 sb.from('orders').select('*').order('created_at', { ascending: false }).limit(300)
             ]);
             if (active.error || ords.error) return;
